@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:atividade_flutter_n2/app/shared/widgets/custom_text_field.dart';
 import 'package:atividade_flutter_n2/app/shared/widgets/app_logo.dart';
+import 'package:atividade_flutter_n2/app/shared/widgets/custom_button.dart';
+import 'package:atividade_flutter_n2/app/core/mixins/loader.mixin.dart';
+import 'package:atividade_flutter_n2/app/core/mixins/messages.mixin.dart';
+import 'package:atividade_flutter_n2/app/core/models/user.model.dart';
+import 'package:atividade_flutter_n2/app/core/services/user_service.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -9,45 +14,15 @@ class LoginPage extends StatefulWidget {
   State<LoginPage> createState() => _LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _LoginPageState extends State<LoginPage> with LoaderMixin, MessagesMixin {
   late TextEditingController emailController;
   late TextEditingController senhaController;
-  bool _isLoading = false;
-  double _passwordStrength = 0;
 
   @override
   void initState() {
     super.initState();
     emailController = TextEditingController();
     senhaController = TextEditingController();
-    senhaController.addListener(_updatePasswordStrength);
-  }
-
-  void _updatePasswordStrength() {
-    final senha = senhaController.text;
-    double strength = 0;
-    if (senha.isEmpty) {
-      strength = 0;
-    } else if (senha.length < 6) {
-      strength = 0.33;
-    } else if (senha.length < 10) {
-      strength = 0.66;
-    } else {
-      strength = 1;
-    }
-    setState(() => _passwordStrength = strength);
-  }
-
-  Color _getStrengthColor() {
-    if (_passwordStrength < 0.34) return Colors.red;
-    if (_passwordStrength < 0.67) return Colors.orange;
-    return Colors.green;
-  }
-
-  String _getStrengthText() {
-    if (_passwordStrength < 0.34) return "Fraca";
-    if (_passwordStrength < 0.67) return "Média";
-    return "Forte";
   }
 
   @override
@@ -58,10 +33,36 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _handleLogin() async {
-    setState(() => _isLoading = true);
+    if (emailController.text.trim().isEmpty) {
+      showError(context, 'Por favor, preencha o email');
+      return;
+    }
+
+    if (senhaController.text.isEmpty) {
+      showError(context, 'Por favor, preencha a senha');
+      return;
+    }
+
+    final Cliente? usuario = UserService().usuario;
+    if (usuario == null) {
+      showError(context, 'Nenhum usuario cadastrado. Faca o registro primeiro');
+      return;
+    }
+
+    final bool credenciaisValidas =
+        usuario.email == emailController.text.trim() &&
+        usuario.senha == senhaController.text;
+
+    if (!credenciaisValidas) {
+      showError(context, 'Email ou senha invalidos');
+      return;
+    }
+
+    showLoading(context);
     await Future.delayed(const Duration(seconds: 1));
     if (mounted) {
-      setState(() => _isLoading = false);
+      hideLoading(context);
+      showSuccess(context, 'Login realizado com sucesso');
       Navigator.pushNamed(context, '/dashboard');
     }
   }
@@ -120,7 +121,7 @@ class _LoginPageState extends State<LoginPage> {
 
                   const SizedBox(height: 24),
 
-                  // Senha Field
+                  
                   CustomTextField(
                     label: "Senha",
                     isPassword: true,
@@ -128,41 +129,7 @@ class _LoginPageState extends State<LoginPage> {
                     prefixIcon: Icons.lock_outline,
                   ),
 
-                  // Indicador de Força da Senha
-                  if (senhaController.text.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 12.0),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(4),
-                              child: LinearProgressIndicator(
-                                value: _passwordStrength,
-                                minHeight: 4,
-                                backgroundColor: Colors.grey[300],
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  _getStrengthColor(),
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            _getStrengthText(),
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: _getStrengthColor(),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
                   const SizedBox(height: 8),
-
-                  // Forgot Password Link
                   Align(
                     alignment: Alignment.centerRight,
                     child: TextButton(
@@ -187,50 +154,21 @@ class _LoginPageState extends State<LoginPage> {
 
                   const SizedBox(height: 32),
 
-                  // Botão Enter (aumentado e melhorado)
-                  SizedBox(
-                    width: double.infinity,
-                    height: 56,
-                    child: ElevatedButton(
-                      onPressed: _isLoading ? null : _handleLogin,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: colorScheme.primary,
-                        disabledBackgroundColor: colorScheme.primary.withOpacity(0.6),
-                        elevation: 4,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: _isLoading
-                          ? SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  colorScheme.onPrimary,
-                                ),
-                              ),
-                            )
-                          : Text(
-                              "Entrar",
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: colorScheme.onPrimary,
-                              ),
-                            ),
-                    ),
+                  CustomButton(
+                    texto: "Entrar",
+                    onPressed: _handleLogin,
+                    cor: colorScheme.primary,
+                    altura: 56,
+                    largura: double.infinity,
                   ),
 
                   const SizedBox(height: 24),
 
-                  // Divider
+                 
                   Divider(color: Colors.grey[300]),
 
                   const SizedBox(height: 16),
 
-                  // Register Link
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
