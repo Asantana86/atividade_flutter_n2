@@ -1,6 +1,5 @@
+import 'package:atividade_flutter_n2/app/shared/app_widget.dart';
 import 'package:flutter/material.dart';
-
-import 'app/app_widget.dart';
 
 void main() {
   // 1. Garante a inicialização da comunicação com o sistema nativo
@@ -17,6 +16,7 @@ class AppEntry extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    
     return AppWidget();
   }
 }

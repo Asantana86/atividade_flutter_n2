@@ -11,7 +11,7 @@ class AppLogo extends StatelessWidget {
   Widget build(BuildContext context) {
     
     return Image.asset(
-      'assets/images/logo.png',
+      'assets/img/logo.png',
       width: width,
       height: height,
       fit: BoxFit.contain, 
