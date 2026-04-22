@@ -1,33 +1,31 @@
-class ClienteItem {
-  final String nome;
-  final String documento;
-  final String email;
-  final String telefone;
-
-  ClienteItem({
-    required this.nome,
-    required this.documento,
-    required this.email,
-    required this.telefone,
-  });
-
-  @override
-  String toString() => nome;
-}
+import '../models/cliente_model.dart';
 
 class ClienteService {
   static final ClienteService _instance = ClienteService._internal();
   factory ClienteService() => _instance;
   ClienteService._internal();
 
-  final List<ClienteItem> _clientes = [
-    ClienteItem(nome: 'João Silva', documento: '123.456.789-00', email: 'joao@email.com', telefone: '(62) 99999-0001'),
-    ClienteItem(nome: 'Maria Souza', documento: '987.654.321-00', email: 'maria@email.com', telefone: '(62) 99999-0002'),
-    ClienteItem(nome: 'Carlos Lima', documento: '11.222.333/0001-44', email: 'carlos@email.com', telefone: '(62) 99999-0003'),
-    ClienteItem(nome: 'Ana Costa', documento: '55.666.777/0001-88', email: 'ana@email.com', telefone: '(62) 99999-0004'),
+  final List<ClienteModel> _clientes = [
+    ClienteModel(id: 1, nome: 'João Silva', documento: '123.456.789-00', email: 'joao@email.com', telefone: '(62) 99999-0001', createdAt: DateTime.now()),
+    ClienteModel(id: 2, nome: 'Maria Souza', documento: '987.654.321-00', email: 'maria@email.com', telefone: '(62) 99999-0002', createdAt: DateTime.now()),
+    ClienteModel(id: 3, nome: 'Carlos Lima', documento: '11.222.333/0001-44', email: 'carlos@email.com', telefone: '(62) 99999-0003', createdAt: DateTime.now()),
+    ClienteModel(id: 4, nome: 'Ana Costa', documento: '55.666.777/0001-88', email: 'ana@email.com', telefone: '(62) 99999-0004', createdAt: DateTime.now()),
   ];
 
-  List<ClienteItem> getAll() => List.unmodifiable(_clientes);
+  List<ClienteModel> getAll() => List.unmodifiable(_clientes);
 
-  void add(ClienteItem cliente) => _clientes.add(cliente);
+  void add(ClienteModel cliente) {
+    final int newId = _clientes.isNotEmpty ? _clientes.last.id! + 1 : 1;
+    
+    final novoCliente = ClienteModel(
+      id: newId,
+      nome: cliente.nome,
+      documento: cliente.documento,
+      email: cliente.email,
+      telefone: cliente.telefone,
+      createdAt: DateTime.now(),
+    );
+    
+    _clientes.add(novoCliente);
+  }
 }

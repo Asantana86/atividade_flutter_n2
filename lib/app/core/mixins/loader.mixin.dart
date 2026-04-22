@@ -9,26 +9,21 @@ mixin LoaderMixin {
 
     showDialog(
       context: context,
-      barrierDismissible: false, // Impede fechar ao clicar fora
+      barrierDismissible: false,
       builder: (context) {
         return PopScope(
-          canPop: false, // Impede fechar pelo botão voltar do Android
+          canPop: false,
           child: Center(
             child: Container(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(32),
               decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
+                color: Theme.of(context).colorScheme.surface,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: const [
+                  BoxShadow(color: Colors.black26, blurRadius: 10),
+                ]
               ),
-              child: Column(
-                children: [
-                  const CircularProgressIndicator(),
-                  ElevatedButton(
-                    onPressed: () => hideLoading(context),
-                    child: const Text("Para o Loader"),
-                  ),
-                ],
-              ),
+              child: const CircularProgressIndicator(),
             ),
           ),
         );

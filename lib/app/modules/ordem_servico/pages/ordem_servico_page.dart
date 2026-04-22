@@ -1,17 +1,19 @@
 import 'dart:io';
 import 'dart:typed_data';
+import 'dart:convert'; // Necessário para o base64Encode
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:signature/signature.dart';
 
-import 'package:atividade_flutter_n2/app/core/mixins/loader.mixin.dart';
-import 'package:atividade_flutter_n2/app/core/mixins/messages.mixin.dart';
-import 'package:atividade_flutter_n2/app/core/models/service_order_model.dart';
-import 'package:atividade_flutter_n2/app/core/services/cliente_service.dart';
-import 'package:atividade_flutter_n2/app/core/services/service_order_service.dart';
-import 'package:atividade_flutter_n2/app/shared/widgets/custom_button.dart';
-import 'package:atividade_flutter_n2/app/shared/widgets/custom_text_field.dart';
+import '../../../core/mixins/loader.mixin.dart';
+import '../../../core/mixins/messages.mixin.dart';
+import '../../../core/models/service_order_model.dart';
+import '../../../core/models/cliente_model.dart';
+import '../../../core/services/cliente_service.dart';
+import '../../../core/services/service_order_service.dart';
+import '../../../../app/shared/widgets/custom_button.dart';
+import '../../../../app/shared/widgets/custom_text_field.dart';
 
 class OrdemServicoPage extends StatefulWidget {
   const OrdemServicoPage({super.key});
@@ -20,8 +22,7 @@ class OrdemServicoPage extends StatefulWidget {
   State<OrdemServicoPage> createState() => _OrdemServicoPageState();
 }
 
-class _OrdemServicoPageState extends State<OrdemServicoPage>
-    with LoaderMixin, MessagesMixin {
+class _OrdemServicoPageState extends State<OrdemServicoPage> with LoaderMixin, MessagesMixin {
   final _formKey = GlobalKey<FormState>();
   final _descricaoController = TextEditingController();
   final _valorController = TextEditingController();
@@ -32,7 +33,7 @@ class _OrdemServicoPageState extends State<OrdemServicoPage>
     exportBackgroundColor: Colors.white,
   );
 
-  ClienteItem? _clienteSelecionado;
+  ClienteModel? _clienteSelecionado;
   XFile? _fotoAntes;
   XFile? _fotoDepois;
   Uint8List? _assinatura;
@@ -47,11 +48,8 @@ class _OrdemServicoPageState extends State<OrdemServicoPage>
     super.dispose();
   }
 
-  // ── Foto helpers ──────────────────────────────────────────────────────────
-
   Future<void> _pickFoto({required bool isAntes}) async {
-    final XFile? picked =
-        await _picker.pickImage(source: ImageSource.camera, imageQuality: 80);
+    final XFile? picked = await _picker.pickImage(source: ImageSource.camera, imageQuality: 80);
     if (picked != null) {
       setState(() {
         if (isAntes) {
@@ -68,26 +66,27 @@ class _OrdemServicoPageState extends State<OrdemServicoPage>
     required XFile? foto,
     required VoidCallback onTap,
   }) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
         height: 130,
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.4),
+          color: colorScheme.surfaceContainerHighest.withAlpha(102),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.grey.shade300),
+          border: Border.all(color: colorScheme.outlineVariant),
         ),
         child: foto == null
             ? Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.add_a_photo_outlined,
-                      size: 32,
-                      color: Theme.of(context).colorScheme.primary),
+                  Icon(Icons.add_a_photo_outlined, size: 32, color: colorScheme.primary),
                   const SizedBox(height: 8),
                   Text(label,
                       style: TextStyle(
-                          color: Theme.of(context).colorScheme.primary,
+                          color: colorScheme.primary,
                           fontWeight: FontWeight.w600)),
                 ],
               )
@@ -103,8 +102,7 @@ class _OrdemServicoPageState extends State<OrdemServicoPage>
                       child: CircleAvatar(
                         radius: 14,
                         backgroundColor: Colors.black54,
-                        child: const Icon(Icons.edit,
-                            size: 14, color: Colors.white),
+                        child: const Icon(Icons.edit, size: 14, color: Colors.white),
                       ),
                     ),
                   ],
@@ -113,8 +111,6 @@ class _OrdemServicoPageState extends State<OrdemServicoPage>
       ),
     );
   }
-
-  // ── Save ──────────────────────────────────────────────────────────────────
 
   Future<void> _salvar() async {
     if (!_formKey.currentState!.validate()) return;
@@ -130,6 +126,11 @@ class _OrdemServicoPageState extends State<OrdemServicoPage>
     }
 
     _assinatura = await _signatureController.toPngBytes();
+    
+    String? assinaturaBase64;
+    if (_assinatura != null) {
+      assinaturaBase64 = base64Encode(_assinatura!);
+    }
 
     showLoading(context);
     await Future.delayed(const Duration(seconds: 2));
@@ -137,15 +138,14 @@ class _OrdemServicoPageState extends State<OrdemServicoPage>
     if (!mounted) return;
 
     ServiceOrderService().add(
-      ServiceOrder(
+      ServiceOrderModel(
         clienteNome: _clienteSelecionado!.nome,
         descricao: _descricaoController.text.trim(),
-        valor: double.parse(
-            _valorController.text.trim().replaceAll(',', '.')),
-        status: 'aberto',
+        valor: double.parse(_valorController.text.trim().replaceAll(',', '.')),
+        status: 'Em aberto',
         fotoAntesPath: _fotoAntes?.path,
         fotoDepoisPath: _fotoDepois?.path,
-        assinatura: _assinatura,
+        assinaturaBase64: assinaturaBase64,
       ),
     );
 
@@ -154,8 +154,6 @@ class _OrdemServicoPageState extends State<OrdemServicoPage>
     Navigator.pop(context);
   }
 
-  // ── Build ─────────────────────────────────────────────────────────────────
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -163,15 +161,10 @@ class _OrdemServicoPageState extends State<OrdemServicoPage>
     final clientes = ClienteService().getAll();
 
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text('Nova Ordem de Serviço'),
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.transparent, // Tema limpo
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
-        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
@@ -180,17 +173,16 @@ class _OrdemServicoPageState extends State<OrdemServicoPage>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ── Seleção de Cliente ────────────────────────────────────────
               _sectionLabel('Cliente', Icons.person_outline),
               const SizedBox(height: 8),
               Container(
                 decoration: BoxDecoration(
-                  color: colorScheme.surfaceContainerHighest.withOpacity(0.4),
+                  color: colorScheme.surfaceContainerHighest.withAlpha(102),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: DropdownButtonHideUnderline(
-                  child: DropdownButton<ClienteItem>(
+                  child: DropdownButton<ClienteModel>(
                     value: _clienteSelecionado,
                     isExpanded: true,
                     hint: const Text('Selecione o cliente'),
@@ -201,60 +193,34 @@ class _OrdemServicoPageState extends State<OrdemServicoPage>
                               child: Text(c.nome),
                             ))
                         .toList(),
-                    onChanged: (val) =>
-                        setState(() => _clienteSelecionado = val),
+                    onChanged: (val) => setState(() => _clienteSelecionado = val),
                   ),
                 ),
               ),
 
               const SizedBox(height: 24),
 
-              // ── Descrição ─────────────────────────────────────────────────
               _sectionLabel('Descrição do Serviço', Icons.description_outlined),
               const SizedBox(height: 8),
-              TextFormField(
+              CustomTextField(
                 controller: _descricaoController,
+                label: 'Descreva o serviço a ser realizado...',
                 maxLines: 4,
-                validator: (v) =>
-                    (v == null || v.trim().isEmpty) ? 'Informe a descrição' : null,
-                decoration: InputDecoration(
-                  hintText: 'Descreva o serviço a ser realizado...',
-                  filled: true,
-                  fillColor:
-                      colorScheme.surfaceContainerHighest.withOpacity(0.4),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide.none,
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide:
-                        BorderSide(color: colorScheme.primary, width: 2),
-                  ),
-                  errorBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide:
-                        BorderSide(color: colorScheme.error, width: 1.5),
-                  ),
-                  contentPadding: const EdgeInsets.all(16),
-                ),
+                validator: (v) => (v == null || v.trim().isEmpty) ? 'Informe a descrição' : null,
               ),
 
               const SizedBox(height: 24),
 
-              // ── Valor ─────────────────────────────────────────────────────
               _sectionLabel('Valor (R\$)', Icons.attach_money),
               const SizedBox(height: 8),
               CustomTextField(
                 controller: _valorController,
                 label: 'Valor estipulado',
                 prefixIcon: Icons.attach_money,
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 validator: (v) {
                   if (v == null || v.trim().isEmpty) return 'Informe o valor';
-                  final parsed =
-                      double.tryParse(v.trim().replaceAll(',', '.'));
+                  final parsed = double.tryParse(v.trim().replaceAll(',', '.'));
                   if (parsed == null || parsed <= 0) return 'Valor inválido';
                   return null;
                 },
@@ -262,7 +228,6 @@ class _OrdemServicoPageState extends State<OrdemServicoPage>
 
               const SizedBox(height: 24),
 
-              // ── Fotos ─────────────────────────────────────────────────────
               _sectionLabel('Evidências Fotográficas', Icons.photo_camera_outlined),
               const SizedBox(height: 8),
               Row(
@@ -287,15 +252,13 @@ class _OrdemServicoPageState extends State<OrdemServicoPage>
 
               const SizedBox(height: 24),
 
-              // ── Assinatura ────────────────────────────────────────────────
               _sectionLabel('Assinatura do Cliente', Icons.draw_outlined),
               const SizedBox(height: 8),
               Container(
                 decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey.shade300),
+                  border: Border.all(color: colorScheme.outlineVariant),
                   borderRadius: BorderRadius.circular(16),
-                  color:
-                      colorScheme.surfaceContainerHighest.withOpacity(0.2),
+                  color: colorScheme.surfaceContainerHighest.withAlpha(51), // Usando withAlpha
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(16),
@@ -322,13 +285,10 @@ class _OrdemServicoPageState extends State<OrdemServicoPage>
 
               const SizedBox(height: 32),
 
-              // ── Botão Salvar ──────────────────────────────────────────────
               CustomButton(
                 texto: 'Salvar Ordem de Serviço',
                 onPressed: _salvar,
-                cor: colorScheme.primary,
                 altura: 56,
-                largura: double.infinity,
               ),
 
               const SizedBox(height: 24),
@@ -340,15 +300,16 @@ class _OrdemServicoPageState extends State<OrdemServicoPage>
   }
 
   Widget _sectionLabel(String label, IconData icon) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Row(
       children: [
-        Icon(icon, size: 18, color: Theme.of(context).colorScheme.primary),
+        Icon(icon, size: 18, color: colorScheme.primary),
         const SizedBox(width: 8),
         Text(
           label,
           style: Theme.of(context).textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.bold,
-                color: Colors.black87,
+                color: colorScheme.onSurface,
               ),
         ),
       ],

@@ -1,32 +1,21 @@
-import 'package:atividade_flutter_n2/app/core/models/user.model.dart';
+import '../models/user_model.dart';
 
 class UserService {
   static final UserService _instance = UserService._internal();
-
-  factory UserService() {
-    return _instance;
-  }
-
+  factory UserService() => _instance;
   UserService._internal();
 
-  Cliente? _usuario;
-  String? _nomeUsuario;
+  UserModel? _usuarioLogado;
 
-  Cliente? get usuario => _usuario;
+  UserModel? get usuario => _usuarioLogado;
+  
+  bool get isLogged => _usuarioLogado != null;
 
-  String? get nomeUsuario => _usuario?.nome ?? _nomeUsuario;
-
-  void setUsuario(Cliente usuario) {
-    _usuario = usuario;
-    _nomeUsuario = usuario.nome;
-  }
-
-  void setNomeUsuario(String nome) {
-    _nomeUsuario = nome;
+  void setUsuario(UserModel usuario) {
+    _usuarioLogado = usuario;
   }
 
   void limpar() {
-    _usuario = null;
-    _nomeUsuario = null;
+    _usuarioLogado = null;
   }
 }

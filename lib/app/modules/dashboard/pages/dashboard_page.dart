@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:atividade_flutter_n2/app/core/services/service_order_service.dart';
-import 'package:atividade_flutter_n2/app/core/models/service_order_model.dart';
-import 'package:atividade_flutter_n2/app/modules/dashboard/pages/os_list_page.dart';
-
+import '../../../core/services/service_order_service.dart';
+import '../../../core/models/service_order_model.dart';
+import '../../../../app/core/services/user_service.dart';
 
 class DashboardPage extends StatelessWidget {
   DashboardPage({super.key});
@@ -12,19 +11,74 @@ class DashboardPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final os = service.getAll();
+    final abertos = service.byStatus("Em aberto");
+    final execucao = service.byStatus("Em execução");
+    final executadas = service.byStatus("Executada");
 
-    final total = os.length;
-    final abertos = service.byStatus("aberto");
-    final execucao = service.byStatus("execucao");
-    final executadas = service.byStatus("executada");
-
-    final theme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    
+    // Pega o usuário logado para mostrar no menu
+    final usuarioLogado = UserService().usuario;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Dashboard de Gestão"),
+        title: const Text("Dashboard", style: TextStyle(fontWeight: FontWeight.bold)),
         centerTitle: true,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
       ),
+      
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            UserAccountsDrawerHeader(
+              decoration: BoxDecoration(color: colorScheme.primary),
+              accountName: Text(
+                usuarioLogado?.nome ?? 'Técnico', 
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)
+              ),
+              accountEmail: Text(usuarioLogado?.email ?? 'tecnico@serviceflow.com'),
+              currentAccountPicture: const CircleAvatar(
+                backgroundColor: Colors.white,
+                child: Icon(Icons.person, size: 40, color: Colors.grey),
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.dashboard),
+              title: const Text('Dashboard'),
+              onTap: () => Navigator.pop(context),
+            ),
+            ListTile(
+              leading: const Icon(Icons.person_add),
+              title: const Text('Novo Cliente'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(context, '/cadastro_cliente');
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.assignment_add),
+              title: const Text('Nova Ordem de Serviço'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(context, '/nova_os');
+              },
+            ),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.logout, color: Colors.red),
+              title: const Text('Sair', style: TextStyle(color: Colors.red)),
+              onTap: () {
+                UserService().limpar();
+                Navigator.pushReplacementNamed(context, '/login');
+              },
+            ),
+          ],
+        ),
+      ),
+
       body: Padding(
         padding: const EdgeInsets.all(24),
         child: GridView.count(
@@ -35,33 +89,33 @@ class DashboardPage extends StatelessWidget {
             _buildCard(
               context,
               title: "Total de OS",
-              quantidade: total,
-              valor: os.fold(0, (sum, item) => sum + item.valor),
-              color: theme.primary,
+              quantidade: os.length,
+              valor: service.totalValor(),
+              color: colorScheme.primary,
               list: os,
             ),
             _buildCard(
               context,
               title: "Em Aberto",
               quantidade: abertos.length,
-              valor: abertos.fold(0, (sum, item) => sum + item.valor),
-              color: theme.error, // vermelho semântico
+              valor: service.totalValorByStatus("Em aberto"),
+              color: colorScheme.error, 
               list: abertos,
             ),
             _buildCard(
               context,
               title: "Em Execução",
               quantidade: execucao.length,
-              valor: execucao.fold(0, (sum, item) => sum + item.valor),
-              color: theme.tertiary, // amarelo/laranja semântico
+              valor: service.totalValorByStatus("Em execução"),
+              color: Colors.orange, 
               list: execucao,
             ),
             _buildCard(
               context,
               title: "Executadas",
               quantidade: executadas.length,
-              valor: executadas.fold(0, (sum, item) => sum + item.valor),
-              color: theme.secondary, // verde semântico
+              valor: service.totalValorByStatus("Executada"),
+              color: Colors.green, 
               list: executadas,
             ),
           ],
@@ -76,20 +130,23 @@ class DashboardPage extends StatelessWidget {
     required int quantidade,
     required double valor,
     required Color color,
-    required List<ServiceOrder> list,
+    required List<ServiceOrderModel> list,
   }) {
     return InkWell(
+      borderRadius: BorderRadius.circular(16),
       onTap: () {
-        Navigator.push(
+        Navigator.pushNamed(
           context,
-          MaterialPageRoute(
-            builder: (_) => OSListPage(title: title, lista: list),
-          ),
+          '/os_list',
+          arguments: {
+            'title': title,
+            'lista': list,
+          },
         );
       },
       child: Container(
         decoration: BoxDecoration(
-          color: color.withOpacity(0.15),
+          color: color.withAlpha(38), 
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: color, width: 2),
         ),
@@ -97,12 +154,21 @@ class DashboardPage extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            Text(
+              title, 
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: color),
+              textAlign: TextAlign.center,
+            ),
             const SizedBox(height: 12),
-            Text("$quantidade OS", style: const TextStyle(fontSize: 22)),
+            Text(
+              "$quantidade OS", 
+              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)
+            ),
             const SizedBox(height: 8),
-            Text("R\$ ${valor.toStringAsFixed(2)}",
-                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
+            Text(
+              "R\$ ${valor.toStringAsFixed(2)}",
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+            ),
           ],
         ),
       ),

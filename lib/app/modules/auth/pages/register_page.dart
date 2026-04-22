@@ -1,11 +1,11 @@
-import 'package:atividade_flutter_n2/app/shared/widgets/custom_text_field.dart';
 import 'package:flutter/material.dart';
-import 'package:atividade_flutter_n2/app/shared/widgets/app_logo.dart';
-import 'package:atividade_flutter_n2/app/shared/widgets/custom_button.dart';
-import 'package:atividade_flutter_n2/app/core/mixins/loader.mixin.dart';
-import 'package:atividade_flutter_n2/app/core/mixins/messages.mixin.dart';
-import 'package:atividade_flutter_n2/app/core/models/user.model.dart';
-import 'package:atividade_flutter_n2/app/core/services/user_service.dart';
+import '../../../shared/widgets/custom_text_field.dart';
+import '../../../shared/widgets/app_logo.dart';
+import '../../../shared/widgets/custom_button.dart';
+import '../../../core/mixins/loader.mixin.dart';
+import '../../../core/mixins/messages.mixin.dart';
+import '../../../core/models/user_model.dart';
+import '../../../core/services/user_service.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -14,12 +14,12 @@ class RegisterPage extends StatefulWidget {
   State<RegisterPage> createState() => _RegisterPageState();
 }
 
-class _RegisterPageState extends State<RegisterPage>
-  with LoaderMixin, MessagesMixin {
+class _RegisterPageState extends State<RegisterPage> with LoaderMixin, MessagesMixin {
   late TextEditingController nomeController;
   late TextEditingController emailController;
   late TextEditingController senhaController;
   late TextEditingController confirmaSenhaController;
+  
   double _passwordStrength = 0;
   bool _senhasCorrespondem = false;
 
@@ -30,6 +30,7 @@ class _RegisterPageState extends State<RegisterPage>
     emailController = TextEditingController();
     senhaController = TextEditingController();
     confirmaSenhaController = TextEditingController();
+    
     senhaController.addListener(_updatePasswordStrength);
     confirmaSenhaController.addListener(_checkSenhasCorrespondem);
   }
@@ -39,7 +40,7 @@ class _RegisterPageState extends State<RegisterPage>
     double strength = 0;
     if (senha.isEmpty) {
       strength = 0;
-    } else if (senha.length < 6) {
+    } else if (senha.length <= 6) {
       strength = 0.33;
     } else if (senha.length < 10) {
       strength = 0.66;
@@ -78,52 +79,56 @@ class _RegisterPageState extends State<RegisterPage>
   }
 
   void _handleRegister() async {
-    if (nomeController.text.isEmpty) {
-      showError(context, "Por favor, preencha o nome");
+    final nome = nomeController.text.trim();
+    final email = emailController.text.trim();
+    final senha = senhaController.text;
+
+    if (nome.isEmpty) {
+      showError(context, "Por favor, preencha o nome.");
       return;
     }
-    if (emailController.text.isEmpty) {
-      showError(context, "Por favor, preencha o email");
+    
+    if (!email.contains('@')) {
+      showError(context, 'E-mail inválido. Deve conter "@".');
       return;
     }
-    if (senhaController.text.isEmpty) {
-      showError(context, "Por favor, preencha a senha");
+    if (senha.length <= 6) {
+      showError(context, 'A senha deve ter mais de 6 caracteres.');
       return;
     }
     if (!_senhasCorrespondem) {
-      showError(context, "As senhas não correspondem");
+      showError(context, "As senhas não correspondem.");
       return;
     }
 
     showLoading(context);
     await Future.delayed(const Duration(seconds: 1));
+    
     if (mounted) {
-      final novoUsuario = Cliente(
-        nome: nomeController.text.trim(),
-        email: emailController.text.trim(),
-        senha: senhaController.text,
+      final novoUsuario = UserModel(
+        nome: nome,
+        email: email,
+        senha: senha,
       );
+      
       UserService().setUsuario(novoUsuario);
+      
       hideLoading(context);
-      showSuccess(context, "Cadastro realizado com sucesso");
-      Navigator.pushNamed(context, '/login');
+      showSuccess(context, "Cadastro realizado com sucesso!");
+      Navigator.pop(context);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text("Criar Conta"),
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
-        ),
       ),
       body: SafeArea(
         child: Center(
@@ -134,55 +139,42 @@ class _RegisterPageState extends State<RegisterPage>
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Logo
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 16.0),
-                    child: SizedBox(
-                      width: 100,
-                      height: 100,
-                      child: const AppLogo(),
-                    ),
+                  const Padding(
+                    padding: EdgeInsets.only(bottom: 16.0),
+                    child: AppLogo(width: 100, height: 100),
                   ),
-
-                  // Título
                   Text(
                     "Crie sua conta",
                     style: theme.textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.bold,
-                      color: Colors.black87,
+                      color: colorScheme.onSurface,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    "Junte-se a ServiceFlow agora",
+                    "Junte-se ao ServiceFlow agora",
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: Colors.grey[600],
+                      color: colorScheme.onSurfaceVariant,
                     ),
                     textAlign: TextAlign.center,
                   ),
-
                   const SizedBox(height: 32),
 
-                  // Nome Field
                   CustomTextField(
                     label: "Nome completo",
                     controller: nomeController,
                     prefixIcon: Icons.person_outline,
                   ),
-
                   const SizedBox(height: 16),
 
-                  // Email Field
                   CustomTextField(
-                    label: "Email",
+                    label: "E-mail",
                     controller: emailController,
                     prefixIcon: Icons.email_outlined,
                     keyboardType: TextInputType.emailAddress,
                   ),
-
                   const SizedBox(height: 16),
 
-                  // Senha Field
                   CustomTextField(
                     label: "Senha",
                     isPassword: true,
@@ -190,7 +182,6 @@ class _RegisterPageState extends State<RegisterPage>
                     prefixIcon: Icons.lock_outline,
                   ),
 
-                  // Indicador de Força da Senha
                   if (senhaController.text.isNotEmpty)
                     Padding(
                       padding: const EdgeInsets.only(top: 12.0),
@@ -202,10 +193,8 @@ class _RegisterPageState extends State<RegisterPage>
                               child: LinearProgressIndicator(
                                 value: _passwordStrength,
                                 minHeight: 4,
-                                backgroundColor: Colors.grey[300],
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  _getStrengthColor(),
-                                ),
+                                backgroundColor: colorScheme.surfaceContainerHighest,
+                                valueColor: AlwaysStoppedAnimation<Color>(_getStrengthColor()),
                               ),
                             ),
                           ),
@@ -221,84 +210,64 @@ class _RegisterPageState extends State<RegisterPage>
                         ],
                       ),
                     ),
-
                   const SizedBox(height: 16),
 
-                  // Confirmar Senha Field
                   CustomTextField(
                     label: "Confirmar Senha",
                     isPassword: true,
                     controller: confirmaSenhaController,
                     prefixIcon: Icons.lock_outline,
+                    textInputAction: TextInputAction.done,
+                    onFieldSubmitted: _handleRegister,
                   ),
 
-                  // Indicador se as senhas correspondem
                   if (confirmaSenhaController.text.isNotEmpty)
                     Padding(
                       padding: const EdgeInsets.only(top: 8.0),
                       child: Row(
                         children: [
                           Icon(
-                            _senhasCorrespondem
-                                ? Icons.check_circle
-                                : Icons.cancel,
-                            color: _senhasCorrespondem
-                                ? Colors.green
-                                : Colors.red,
+                            _senhasCorrespondem ? Icons.check_circle : Icons.cancel,
+                            color: _senhasCorrespondem ? Colors.green : Colors.red,
                             size: 16,
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            _senhasCorrespondem
-                                ? "Senhas correspondem"
-                                : "Senhas não correspondem",
+                            _senhasCorrespondem ? "Senhas correspondem" : "Senhas não correspondem",
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
-                              color: _senhasCorrespondem
-                                  ? Colors.green
-                                  : Colors.red,
+                              color: _senhasCorrespondem ? Colors.green : Colors.red,
                             ),
                           ),
                         ],
                       ),
                     ),
-
                   const SizedBox(height: 32),
 
-                  // Botão Registrar
                   CustomButton(
                     texto: "Registrar",
                     onPressed: _handleRegister,
-                    cor: theme.colorScheme.primary,
                     altura: 56,
-                    largura: double.infinity,
                   ),
-
                   const SizedBox(height: 16),
 
-                  // Divider
-                  Divider(color: Colors.grey[300]),
-
+                  Divider(color: colorScheme.outlineVariant),
                   const SizedBox(height: 16),
 
-                  // Login Link
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
                         "Já tem conta? ",
-                        style: TextStyle(
-                          color: Colors.grey[700],
-                          fontSize: 14,
-                        ),
+                        style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 14),
                       ),
                       GestureDetector(
                         onTap: () => Navigator.pop(context),
                         child: Text(
                           "Faça login",
                           style: TextStyle(
-                            color: theme.colorScheme.primary,
+                            color: colorScheme.primary,
                             fontWeight: FontWeight.bold,
                             fontSize: 14,
                             decoration: TextDecoration.underline,

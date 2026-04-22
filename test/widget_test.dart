@@ -7,24 +7,16 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:atividade_flutter_n2/main.dart';
+import 'package:atividade_flutter_n2/app/shared/app_widget.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('Smoke test de inicialização do ServiceFlow', (WidgetTester tester) async {
+    
+    await tester.pumpWidget(const AppWidget());
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
-
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
-
-    // Verify that our counter has incremented.
+    expect(find.text('Carregando ServiceFlow...'), findsOneWidget);
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    
     expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
   });
 }

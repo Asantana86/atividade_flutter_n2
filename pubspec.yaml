@@ -36,6 +36,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   image_picker: ^1.1.2
   signature: ^5.4.1
+  mask_text_input_formatter: ^2.9.0
 
 dev_dependencies:
   flutter_test:

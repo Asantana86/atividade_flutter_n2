@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class CustomTextField extends StatefulWidget {
   final TextEditingController controller;
@@ -10,6 +11,8 @@ class CustomTextField extends StatefulWidget {
   final TextInputType keyboardType;
   final TextInputAction textInputAction;
   final VoidCallback? onFieldSubmitted;
+  final List<TextInputFormatter>? inputFormatters;
+  final int maxLines;
 
   const CustomTextField({
     super.key,
@@ -22,6 +25,8 @@ class CustomTextField extends StatefulWidget {
     this.keyboardType = TextInputType.text,
     this.textInputAction = TextInputAction.next,
     this.onFieldSubmitted,
+    this.inputFormatters,
+    this.maxLines = 1,
   });
 
   @override
@@ -38,10 +43,12 @@ class _CustomTextFieldState extends State<CustomTextField> {
 
     return TextFormField(
       controller: widget.controller,
+      maxLines: widget.isPassword ? 1 : widget.maxLines,
       obscureText: widget.isPassword && _obscureText,
       validator: widget.validator,
       keyboardType: widget.keyboardType,
       textInputAction: widget.textInputAction,
+      inputFormatters: widget.inputFormatters,
       onFieldSubmitted: (_) => widget.onFieldSubmitted?.call(),
       style: theme.textTheme.bodyLarge,
       decoration: InputDecoration(
@@ -64,10 +71,8 @@ class _CustomTextFieldState extends State<CustomTextField> {
                 onPressed: () => setState(() => _obscureText = !_obscureText),
               )
             : null,
-        // Fundo preenchido com cor suave do tema
         filled: true,
-        fillColor: colorScheme.surfaceContainerHighest.withOpacity(0.4),
-        // Sem borda visível quando inativo
+        fillColor: colorScheme.surfaceContainerHighest.withAlpha(102),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide.none,
@@ -88,8 +93,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
           borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide(color: colorScheme.error, width: 2),
         ),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
       ),
     );
   }
