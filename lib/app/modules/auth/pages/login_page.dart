@@ -126,7 +126,7 @@ class _LoginPageState extends State<LoginPage> with LoaderMixin, MessagesMixin {
                     alignment: Alignment.centerRight,
                     child: TextButton(
                       onPressed: () {
-                        // TODO: Recuperação de senha
+                        
                       },
                       child: Text(
                         "Esqueceu a senha?",

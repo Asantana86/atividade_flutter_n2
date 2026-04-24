@@ -3,9 +3,14 @@ import '../../../core/services/service_order_service.dart';
 import '../../../core/models/service_order_model.dart';
 import '../../../../app/core/services/user_service.dart';
 
-class DashboardPage extends StatelessWidget {
+class DashboardPage extends StatefulWidget {
   DashboardPage({super.key});
 
+  @override
+  State<DashboardPage> createState() => _DashboardPageState();
+}
+
+class _DashboardPageState extends State<DashboardPage> {
   final service = ServiceOrderService();
 
   @override
@@ -17,18 +22,21 @@ class DashboardPage extends StatelessWidget {
 
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    
+
     // Pega o usuário logado para mostrar no menu
     final usuarioLogado = UserService().usuario;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Dashboard", style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text(
+          "Dashboard",
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
-      
+
       drawer: Drawer(
         child: ListView(
           padding: EdgeInsets.zero,
@@ -36,10 +44,15 @@ class DashboardPage extends StatelessWidget {
             UserAccountsDrawerHeader(
               decoration: BoxDecoration(color: colorScheme.primary),
               accountName: Text(
-                usuarioLogado?.nome ?? 'Técnico', 
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)
+                usuarioLogado?.nome ?? 'Técnico',
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                ),
               ),
-              accountEmail: Text(usuarioLogado?.email ?? 'tecnico@serviceflow.com'),
+              accountEmail: Text(
+                usuarioLogado?.email ?? 'tecnico@serviceflow.com',
+              ),
               currentAccountPicture: const CircleAvatar(
                 backgroundColor: Colors.white,
                 child: Icon(Icons.person, size: 40, color: Colors.grey),
@@ -55,7 +68,7 @@ class DashboardPage extends StatelessWidget {
               title: const Text('Novo Cliente'),
               onTap: () {
                 Navigator.pop(context);
-                Navigator.pushNamed(context, '/cadastro_cliente');
+                Navigator.pushReplacementNamed(context, '/cadastro_cliente');
               },
             ),
             ListTile(
@@ -63,7 +76,29 @@ class DashboardPage extends StatelessWidget {
               title: const Text('Nova Ordem de Serviço'),
               onTap: () {
                 Navigator.pop(context);
-                Navigator.pushNamed(context, '/nova_os');
+                Navigator.pushNamed(context, '/nova_os').then((_) {
+                  setState(() {});
+                });
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.assignment_add),
+              title: const Text('Início Ordem de Serviço'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(context, '/iniciar_os').then((_) {
+                  setState(() {});
+                });
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.assignment_add),
+              title: const Text('Fim Ordem de Serviço'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(context, '/finalizar_os').then((_) {
+                  setState(() {});
+                });
               },
             ),
             const Divider(),
@@ -99,7 +134,7 @@ class DashboardPage extends StatelessWidget {
               title: "Em Aberto",
               quantidade: abertos.length,
               valor: service.totalValorByStatus("Em aberto"),
-              color: colorScheme.error, 
+              color: colorScheme.error,
               list: abertos,
             ),
             _buildCard(
@@ -107,7 +142,7 @@ class DashboardPage extends StatelessWidget {
               title: "Em Execução",
               quantidade: execucao.length,
               valor: service.totalValorByStatus("Em execução"),
-              color: Colors.orange, 
+              color: Colors.orange,
               list: execucao,
             ),
             _buildCard(
@@ -115,7 +150,7 @@ class DashboardPage extends StatelessWidget {
               title: "Executadas",
               quantidade: executadas.length,
               valor: service.totalValorByStatus("Executada"),
-              color: Colors.green, 
+              color: Colors.green,
               list: executadas,
             ),
           ],
@@ -138,15 +173,12 @@ class DashboardPage extends StatelessWidget {
         Navigator.pushNamed(
           context,
           '/os_list',
-          arguments: {
-            'title': title,
-            'lista': list,
-          },
+          arguments: {'title': title, 'lista': list},
         );
       },
       child: Container(
         decoration: BoxDecoration(
-          color: color.withAlpha(38), 
+          color: color.withAlpha(38),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: color, width: 2),
         ),
@@ -155,14 +187,18 @@ class DashboardPage extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              title, 
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: color),
+              title,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 12),
             Text(
-              "$quantidade OS", 
-              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)
+              "$quantidade OS",
+              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             Text(

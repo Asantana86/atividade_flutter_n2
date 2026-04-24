@@ -6,6 +6,8 @@ class CustomButton extends StatelessWidget {
   final Color? cor;
   final double altura;
   final double largura;
+  final IconData? icon;
+  final bool iconLeading; // true = ícone antes do texto, false = depois
 
   const CustomButton({
     super.key,
@@ -14,12 +16,50 @@ class CustomButton extends StatelessWidget {
     this.cor,
     this.altura = 50,
     this.largura = double.infinity,
+    this.icon,
+    this.iconLeading = true,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final backgroundColor = cor ?? theme.colorScheme.primary;
+
+    Widget buttonChild;
+
+    if (icon != null) {
+      final iconWidget = Icon(icon, size: 20);
+      if (iconLeading) {
+        buttonChild = Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            iconWidget,
+            const SizedBox(width: 8),
+            Text(
+              texto,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+          ],
+        );
+      } else {
+        buttonChild = Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              texto,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(width: 8),
+            iconWidget,
+          ],
+        );
+      }
+    } else {
+      buttonChild = Text(
+        texto,
+        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+      );
+    }
 
     return SizedBox(
       height: altura,
@@ -33,13 +73,7 @@ class CustomButton extends StatelessWidget {
           ),
         ),
         onPressed: onPressed,
-        child: Text(
-          texto,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
+        child: buttonChild,
       ),
     );
   }
