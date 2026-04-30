@@ -12,7 +12,6 @@ class ServiceOrderService {
       descricao: 'Troca de tela',
       valor: 250,
       status: 'Em aberto',
-      createdAt: DateTime.now(),
     ),
     ServiceOrderModel(
       id: 2,
@@ -20,7 +19,6 @@ class ServiceOrderService {
       descricao: 'Formatação',
       valor: 150,
       status: 'Em execução',
-      createdAt: DateTime.now(),
     ),
     ServiceOrderModel(
       id: 3,
@@ -28,7 +26,6 @@ class ServiceOrderService {
       descricao: 'Limpeza interna',
       valor: 120,
       status: 'Executada',
-      createdAt: DateTime.now(),
     ),
     ServiceOrderModel(
       id: 4,
@@ -36,7 +33,6 @@ class ServiceOrderService {
       descricao: 'Troca de bateria',
       valor: 300,
       status: 'Executada',
-      createdAt: DateTime.now(),
     ),
   ];
 
@@ -57,7 +53,6 @@ class ServiceOrderService {
       fotoAntesPath: ordem.fotoAntesPath,
       fotoDepoisPath: ordem.fotoDepoisPath,
       assinaturaBase64: ordem.assinaturaBase64,
-      createdAt: DateTime.now(),
     );
 
     _ordens.add(novaOrdem);

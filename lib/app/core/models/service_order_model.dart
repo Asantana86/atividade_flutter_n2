@@ -11,7 +11,7 @@ class ServiceOrderModel extends BaseModel {
 
   ServiceOrderModel({
     super.id,
-    super.createdAt,
+    super.isSync,
     required this.clienteNome,
     required this.descricao,
     required this.valor,
@@ -24,7 +24,7 @@ class ServiceOrderModel extends BaseModel {
   factory ServiceOrderModel.fromMap(Map<String, dynamic> map) {
     return ServiceOrderModel(
       id: map['id'] as int?,
-      createdAt: map['createdAt'] != null ? DateTime.parse(map['createdAt']) : null,
+      isSync: map['isSync'] == 1,
       clienteNome: map['clienteNome'] as String,
       descricao: map['descricao'] as String,
       valor: (map['valor'] as num).toDouble(), 
@@ -39,7 +39,7 @@ class ServiceOrderModel extends BaseModel {
   Map<String, dynamic> toMap() {
     return {
       'id': id,
-      'createdAt': createdAt?.toIso8601String(),
+      'isSync': isSync ? 1 : 0,
       'clienteNome': clienteNome,
       'descricao': descricao,
       'valor': valor,

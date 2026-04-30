@@ -70,14 +70,6 @@ class DetalhesOrdemServicoPage extends StatelessWidget {
             ),
             const SizedBox(height: 20),
 
-            // Data de Criação
-            if (ordem.createdAt != null) ...[
-              _sectionTitle(context, 'Data de Criação', Icons.calendar_today),
-              const SizedBox(height: 8),
-              _infoCard(_formatDate(ordem.createdAt!), colorScheme),
-              const SizedBox(height: 20),
-            ],
-
             // Foto Antes
             if (ordem.fotoAntesPath != null &&
                 ordem.fotoAntesPath!.isNotEmpty) ...[
@@ -267,9 +259,5 @@ class DetalhesOrdemServicoPage extends StatelessWidget {
       default:
         return Colors.grey;
     }
-  }
-
-  String _formatDate(DateTime date) {
-    return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
   }
 }

@@ -7,7 +7,7 @@ class UserModel extends BaseModel {
 
   UserModel({
     super.id,
-    super.createdAt,
+    super.isSync,
     required this.nome,
     required this.email,
     required this.senha,
@@ -16,7 +16,7 @@ class UserModel extends BaseModel {
   factory UserModel.fromMap(Map<String, dynamic> map) {
     return UserModel(
       id: map['id'] as int?,
-      createdAt: map['createdAt'] != null ? DateTime.parse(map['createdAt']) : null,
+      isSync: map['isSync'] == 1,
       nome: map['nome'] as String,
       email: map['email'] as String,
       senha: map['senha'] as String,
@@ -27,7 +27,7 @@ class UserModel extends BaseModel {
   Map<String, dynamic> toMap() {
     return {
       'id': id,
-      'createdAt': createdAt?.toIso8601String(),
+      'isSync': isSync ? 1 : 0,
       'nome': nome,
       'email': email,
       'senha': senha,

@@ -169,7 +169,6 @@ class _FinalizarOrdemServicoPageState extends State<FinalizarOrdemServicoPage>
       fotoAntesPath: _ordemSelecionada!.fotoAntesPath,
       fotoDepoisPath: _fotoDepois?.path,
       assinaturaBase64: _assinaturaBase64,
-      createdAt: _ordemSelecionada!.createdAt,
     );
 
     ServiceOrderService().update(ordemAtualizada);

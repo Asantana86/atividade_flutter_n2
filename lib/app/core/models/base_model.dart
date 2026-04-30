@@ -1,8 +1,8 @@
 abstract class BaseModel {
-  final int? id;
-  final DateTime? createdAt;
+  int? id;
+  bool isSync;
 
-  BaseModel({this.id, this.createdAt});
+  BaseModel({this.id, this.isSync = false});
 
   Map<String, dynamic> toMap();
 }

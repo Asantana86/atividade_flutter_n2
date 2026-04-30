@@ -6,10 +6,10 @@ class ClienteService {
   ClienteService._internal();
 
   final List<ClienteModel> _clientes = [
-    ClienteModel(id: 1, nome: 'João Silva', documento: '123.456.789-00', email: 'joao@email.com', telefone: '(62) 99999-0001', createdAt: DateTime.now()),
-    ClienteModel(id: 2, nome: 'Maria Souza', documento: '987.654.321-00', email: 'maria@email.com', telefone: '(62) 99999-0002', createdAt: DateTime.now()),
-    ClienteModel(id: 3, nome: 'Carlos Lima', documento: '11.222.333/0001-44', email: 'carlos@email.com', telefone: '(62) 99999-0003', createdAt: DateTime.now()),
-    ClienteModel(id: 4, nome: 'Ana Costa', documento: '55.666.777/0001-88', email: 'ana@email.com', telefone: '(62) 99999-0004', createdAt: DateTime.now()),
+    ClienteModel(id: 1, nome: 'João Silva', documento: '123.456.789-00', email: 'joao@email.com', telefone: '(62) 99999-0001'),
+    ClienteModel(id: 2, nome: 'Maria Souza', documento: '987.654.321-00', email: 'maria@email.com', telefone: '(62) 99999-0002'),
+    ClienteModel(id: 3, nome: 'Carlos Lima', documento: '11.222.333/0001-44', email: 'carlos@email.com', telefone: '(62) 99999-0003'),
+    ClienteModel(id: 4, nome: 'Ana Costa', documento: '55.666.777/0001-88', email: 'ana@email.com', telefone: '(62) 99999-0004'),
   ];
 
   List<ClienteModel> getAll() => List.unmodifiable(_clientes);
@@ -23,7 +23,6 @@ class ClienteService {
       documento: cliente.documento,
       email: cliente.email,
       telefone: cliente.telefone,
-      createdAt: DateTime.now(),
     );
     
     _clientes.add(novoCliente);
