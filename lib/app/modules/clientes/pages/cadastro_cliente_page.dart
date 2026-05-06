@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
+import 'package:provider/provider.dart';
 
 import '../../../core/mixins/loader.mixin.dart';
 import '../../../core/mixins/messages.mixin.dart';
-import '../../../core/models/cliente_model.dart';
-import '../../../core/services/cliente_service.dart';
+import '../../../core/controllers/cliente_controller.dart';
 import '../../../../app/shared/widgets/custom_button.dart';
 import '../../../../app/shared/widgets/custom_text_field.dart';
 
@@ -44,29 +44,33 @@ class _CadastroClientePageState extends State<CadastroClientePage> with LoaderMi
     super.dispose();
   }
 
+  // ─── A MÁGICA ACONTECE AQUI ──────────────────────────────────────────────
   Future<void> _salvarCliente() async {
     if (!_formKey.currentState!.validate()) return;
 
     showLoading(context);
     
-    await Future.delayed(const Duration(seconds: 2));
+    final controller = context.read<ClienteController>();
 
-    if (!mounted) return;
-
-    final novoCliente = ClienteModel(
+    await controller.salvarCliente(
       nome: _nomeController.text.trim(),
       documento: _documentoController.text.trim(),
       email: _emailController.text.trim(),
       telefone: _telefoneController.text.trim(),
     );
 
-    ClienteService().add(novoCliente);
-
+    if (!mounted) return;
+    
     hideLoading(context);
 
-    showSuccess(context, 'Cliente cadastrado com sucesso!');
-    Navigator.pop(context);
+    if (controller.errorMessage != null) {
+      showError(context, controller.errorMessage!);
+    } else if (controller.isSuccess) {
+      showSuccess(context, 'Cliente cadastrado com sucesso!');
+      Navigator.pop(context);
+    }
   }
+  // ─────────────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
@@ -124,7 +128,7 @@ class _CadastroClientePageState extends State<CadastroClientePage> with LoaderMi
                   prefixIcon: Icons.badge_outlined,
                   keyboardType: TextInputType.number,
                   textInputAction: TextInputAction.next,
-                  inputFormatters: [_documentoMask], // Aplicando a máscara
+                  inputFormatters: [_documentoMask], 
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'O documento é obrigatório.';
@@ -162,8 +166,8 @@ class _CadastroClientePageState extends State<CadastroClientePage> with LoaderMi
                   prefixIcon: Icons.phone_outlined,
                   keyboardType: TextInputType.phone,
                   textInputAction: TextInputAction.done,
-                  inputFormatters: [_telefoneMask], // Aplicando a máscara
-                  onFieldSubmitted: _salvarCliente, // Salva ao dar "Enter" no teclado
+                  inputFormatters: [_telefoneMask], 
+                  onFieldSubmitted: _salvarCliente, 
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'O telefone é obrigatório.';

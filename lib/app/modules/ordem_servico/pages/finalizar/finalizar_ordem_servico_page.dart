@@ -1,32 +1,28 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:signature/signature.dart';
+import 'package:provider/provider.dart';
 
 import '../../../../core/mixins/loader.mixin.dart';
 import '../../../../core/mixins/messages.mixin.dart';
 import '../../../../core/models/service_order_model.dart';
-import '../../../../core/services/service_order_service.dart';
+import '../../../../core/controllers/service_order_controller.dart';
 import '../../../../../app/shared/widgets/custom_button.dart';
 
 class FinalizarOrdemServicoPage extends StatefulWidget {
   const FinalizarOrdemServicoPage({super.key});
 
   @override
-  State<FinalizarOrdemServicoPage> createState() =>
-      _FinalizarOrdemServicoPageState();
+  State<FinalizarOrdemServicoPage> createState() => _FinalizarOrdemServicoPageState();
 }
 
-class _FinalizarOrdemServicoPageState extends State<FinalizarOrdemServicoPage>
-    with LoaderMixin, MessagesMixin {
+class _FinalizarOrdemServicoPageState extends State<FinalizarOrdemServicoPage> with LoaderMixin, MessagesMixin {
   final _formKey = GlobalKey<FormState>();
 
   ServiceOrderModel? _ordemSelecionada;
   XFile? _fotoDepois;
-  Uint8List? _assinaturaBytes;
   String? _assinaturaBase64;
 
   final ImagePicker _picker = ImagePicker();
@@ -40,6 +36,10 @@ class _FinalizarOrdemServicoPageState extends State<FinalizarOrdemServicoPage>
       penColor: Colors.black,
       exportBackgroundColor: Colors.white,
     );
+    
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<ServiceOrderController>().carregarOrdens();
+    });
   }
 
   @override
@@ -82,11 +82,7 @@ class _FinalizarOrdemServicoPageState extends State<FinalizarOrdemServicoPage>
             ? Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    Icons.add_a_photo_outlined,
-                    size: 48,
-                    color: colorScheme.primary,
-                  ),
+                  Icon(Icons.add_a_photo_outlined, size: 48, color: colorScheme.primary),
                   const SizedBox(height: 12),
                   Text(
                     label,
@@ -119,11 +115,7 @@ class _FinalizarOrdemServicoPageState extends State<FinalizarOrdemServicoPage>
                         radius: 18,
                         backgroundColor: Colors.black54,
                         child: IconButton(
-                          icon: const Icon(
-                            Icons.camera_alt,
-                            size: 18,
-                            color: Colors.white,
-                          ),
+                          icon: const Icon(Icons.camera_alt, size: 18, color: Colors.white),
                           onPressed: onTap,
                         ),
                       ),
@@ -149,33 +141,30 @@ class _FinalizarOrdemServicoPageState extends State<FinalizarOrdemServicoPage>
     }
 
     // Converter assinatura para base64
-    _assinaturaBytes = await _signatureController.toPngBytes();
-    if (_assinaturaBytes != null) {
-      _assinaturaBase64 = base64Encode(_assinaturaBytes!);
+    final assinaturaBytes = await _signatureController.toPngBytes();
+    if (assinaturaBytes != null) {
+      _assinaturaBase64 = base64Encode(assinaturaBytes);
     }
 
     showLoading(context);
-    await Future.delayed(const Duration(milliseconds: 500));
 
-    if (!mounted) return;
-
-    // Atualizar a ordem de serviço
-    final ordemAtualizada = ServiceOrderModel(
-      id: _ordemSelecionada!.id,
-      clienteNome: _ordemSelecionada!.clienteNome,
-      descricao: _ordemSelecionada!.descricao,
-      valor: _ordemSelecionada!.valor,
-      status: 'Executada',
-      fotoAntesPath: _ordemSelecionada!.fotoAntesPath,
-      fotoDepoisPath: _fotoDepois?.path,
-      assinaturaBase64: _assinaturaBase64,
+    final controller = context.read<ServiceOrderController>();
+    
+    await controller.finalizarOrdemServico(
+      ordem: _ordemSelecionada!,
+      fotoDepois: _fotoDepois?.path,
+      assinatura: _assinaturaBase64!,
     );
 
-    ServiceOrderService().update(ordemAtualizada);
-
+    if (!mounted) return;
     hideLoading(context);
-    showSuccess(context, 'Ordem de serviço finalizada com sucesso!');
-    Navigator.pop(context);
+
+    if (controller.errorMessage != null) {
+      showError(context, controller.errorMessage!);
+    } else if (controller.isSuccess) {
+      showSuccess(context, 'Ordem de serviço finalizada com sucesso!');
+      Navigator.pop(context);
+    }
   }
 
   @override
@@ -183,11 +172,8 @@ class _FinalizarOrdemServicoPageState extends State<FinalizarOrdemServicoPage>
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    // Filtrar ordens que podem ser finalizadas (Em aberto ou Em execução)
-    final ordensPendentes = ServiceOrderService()
-        .getAll()
-        .where((os) => os.status == 'Em aberto' || os.status == 'Em execução')
-        .toList();
+    final todasOrdens = context.watch<ServiceOrderController>().ordensCadastradas;
+    final ordensPendentes = todasOrdens.where((os) => os.status == 'Em aberto' || os.status == 'Em execução').toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -202,10 +188,7 @@ class _FinalizarOrdemServicoPageState extends State<FinalizarOrdemServicoPage>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _sectionLabel(
-                'Selecionar Ordem de Serviço',
-                Icons.assignment_outlined,
-              ),
+              _sectionLabel('Selecionar Ordem de Serviço', Icons.assignment_outlined),
               const SizedBox(height: 8),
               Container(
                 decoration: BoxDecoration(
@@ -220,19 +203,16 @@ class _FinalizarOrdemServicoPageState extends State<FinalizarOrdemServicoPage>
                     hint: const Text('Selecione a OS'),
                     borderRadius: BorderRadius.circular(12),
                     items: ordensPendentes
-                        .map(
-                          (os) => DropdownMenuItem(
-                            value: os,
-                            child: Text('${os.id} - ${os.clienteNome}'),
-                          ),
-                        )
+                        .map((os) => DropdownMenuItem(
+                              value: os,
+                              child: Text('OS ${os.id} - Cliente ID: ${os.clienteId}'),
+                            ))
                         .toList(),
                     onChanged: (val) => setState(() => _ordemSelecionada = val),
                   ),
                 ),
               ),
 
-              // Mostrar informações da OS selecionada
               if (_ordemSelecionada != null) ...[
                 const SizedBox(height: 16),
                 Container(
@@ -244,23 +224,10 @@ class _FinalizarOrdemServicoPageState extends State<FinalizarOrdemServicoPage>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Cliente: ${_ordemSelecionada!.clienteNome}',
-                        style: TextStyle(fontWeight: FontWeight.w600),
-                      ),
+                      Text('Observação: ${_ordemSelecionada!.observacao}', style: TextStyle(color: colorScheme.onSurfaceVariant)),
                       const SizedBox(height: 4),
-                      Text(
-                        'Descrição: ${_ordemSelecionada!.descricao}',
-                        style: TextStyle(color: colorScheme.onSurfaceVariant),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Valor: R\$ ${_ordemSelecionada!.valor.toStringAsFixed(2)}',
-                        style: TextStyle(
-                          color: colorScheme.primary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+                      Text('Valor Peças: R\$ ${_ordemSelecionada!.valorPecas.toStringAsFixed(2)}', 
+                        style: TextStyle(color: colorScheme.primary, fontWeight: FontWeight.w600)),
                     ],
                   ),
                 ),
@@ -268,10 +235,7 @@ class _FinalizarOrdemServicoPageState extends State<FinalizarOrdemServicoPage>
 
               const SizedBox(height: 24),
 
-              _sectionLabel(
-                'Foto Depois do Serviço',
-                Icons.photo_camera_outlined,
-              ),
+              _sectionLabel('Foto Depois do Serviço', Icons.photo_camera_outlined),
               const SizedBox(height: 8),
               _fotoCard(
                 label: 'Foto Depois',
@@ -302,9 +266,7 @@ class _FinalizarOrdemServicoPageState extends State<FinalizarOrdemServicoPage>
               Align(
                 alignment: Alignment.centerRight,
                 child: TextButton.icon(
-                  onPressed: () {
-                    _signatureController.clear();
-                  },
+                  onPressed: () => _signatureController.clear(),
                   icon: const Icon(Icons.clear, size: 18),
                   label: const Text('Limpar Assinatura'),
                 ),
@@ -338,9 +300,9 @@ class _FinalizarOrdemServicoPageState extends State<FinalizarOrdemServicoPage>
         Text(
           label,
           style: Theme.of(context).textTheme.titleSmall?.copyWith(
-            color: colorScheme.onSurface,
-            fontWeight: FontWeight.w600,
-          ),
+                color: colorScheme.onSurface,
+                fontWeight: FontWeight.w600,
+              ),
         ),
       ],
     );

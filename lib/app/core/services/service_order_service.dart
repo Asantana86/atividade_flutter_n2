@@ -1,80 +1,52 @@
 import '../models/service_order_model.dart';
+import '../repositories/ordem_servico_repository.dart';
+import '../validations/service_order_validation.dart';
 
 class ServiceOrderService {
-  static final ServiceOrderService _instance = ServiceOrderService._internal();
-  factory ServiceOrderService() => _instance;
-  ServiceOrderService._internal();
+  final _repository = OrdemServicoRepository();
+  final _validation = ServiceOrderValidation();
 
-  final List<ServiceOrderModel> _ordens = [
-    ServiceOrderModel(
-      id: 1,
-      clienteNome: 'João Silva',
-      descricao: 'Troca de tela',
-      valor: 250,
+  Future<void> salvarNovaOS(ServiceOrderModel os) async {
+
+    final erroValidacao = _validation.validar(os);
+    if (erroValidacao != null) {
+      throw Exception(erroValidacao);
+    }
+
+    final osParaSalvar = ServiceOrderModel(
+      clienteId: os.clienteId,
+      tecnicoId: os.tecnicoId,
+      observacao: os.observacao,
+      pecasAplicadas: os.pecasAplicadas,
+      valorPecas: os.valorPecas,
+      fotoAntes: os.fotoAntes,
+      fotoDepois: os.fotoDepois,
+      assinatura: os.assinatura,
       status: 'Em aberto',
-    ),
-    ServiceOrderModel(
-      id: 2,
-      clienteNome: 'Maria Souza',
-      descricao: 'Formatação',
-      valor: 150,
-      status: 'Em execução',
-    ),
-    ServiceOrderModel(
-      id: 3,
-      clienteNome: 'Carlos Lima',
-      descricao: 'Limpeza interna',
-      valor: 120,
-      status: 'Executada',
-    ),
-    ServiceOrderModel(
-      id: 4,
-      clienteNome: 'Ana Costa',
-      descricao: 'Troca de bateria',
-      valor: 300,
-      status: 'Executada',
-    ),
-  ];
-
-  List<ServiceOrderModel> getAll() => List.unmodifiable(_ordens);
-
-  List<ServiceOrderModel> byStatus(String status) =>
-      _ordens.where((os) => os.status == status).toList();
-
-  void add(ServiceOrderModel ordem) {
-    final int newId = _ordens.isNotEmpty ? _ordens.last.id! + 1 : 1;
-
-    final novaOrdem = ServiceOrderModel(
-      id: newId,
-      clienteNome: ordem.clienteNome,
-      descricao: ordem.descricao,
-      valor: ordem.valor,
-      status: ordem.status,
-      fotoAntesPath: ordem.fotoAntesPath,
-      fotoDepoisPath: ordem.fotoDepoisPath,
-      assinaturaBase64: ordem.assinaturaBase64,
+      isSync: false,
     );
 
-    _ordens.add(novaOrdem);
+    await _repository.insert(osParaSalvar);
   }
 
-  double totalValorByStatus(String status) =>
-      byStatus(status).fold(0, (sum, os) => sum + os.valor);
+  Future<void> atualizarOS(ServiceOrderModel os) async {
 
-  double totalValor() => _ordens.fold(0, (sum, os) => sum + os.valor);
-
-  ServiceOrderModel? getById(int id) {
-    try {
-      return _ordens.firstWhere((os) => os.id == id);
-    } catch (e) {
-      return null;
+    final erroValidacao = _validation.validar(os);
+    if (erroValidacao != null) {
+      throw Exception(erroValidacao);
     }
+
+    os.isSync = false;
+    
+    await _repository.update(os);
   }
 
-  void update(ServiceOrderModel ordem) {
-    final index = _ordens.indexWhere((os) => os.id == ordem.id);
-    if (index != -1) {
-      _ordens[index] = ordem;
-    }
+  Future<List<ServiceOrderModel>> buscarTodasOS() async {
+    return await _repository.getAll();
+  }
+
+  Future<double> calcularValorTotal() async {
+    final lista = await _repository.getAll();
+    return lista.fold<double>(0.0, (sum, item) => sum + item.valorPecas);
   }
 }

@@ -1,30 +1,47 @@
 import 'package:flutter/material.dart';
-import '../../../core/services/service_order_service.dart';
+import 'package:provider/provider.dart';
+
 import '../../../core/models/service_order_model.dart';
+import '../../../core/controllers/service_order_controller.dart';
+import '../../../core/controllers/cliente_controller.dart';
+import '../../../core/controllers/tecnico_controller.dart';
 import '../../../../app/core/services/user_service.dart';
 
 class DashboardPage extends StatefulWidget {
-  DashboardPage({super.key});
+  const DashboardPage({super.key});
 
   @override
   State<DashboardPage> createState() => _DashboardPageState();
 }
 
 class _DashboardPageState extends State<DashboardPage> {
-  final service = ServiceOrderService();
+  @override
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<ServiceOrderController>().carregarOrdens();
+      context.read<ClienteController>().carregarClientes();
+      context.read<TecnicoController>().carregarTecnicos();
+    });
+  }
+
+  double _calcularTotal(List<ServiceOrderModel> lista) {
+    return lista.fold(0.0, (sum, item) => sum + item.valorPecas);
+  }
 
   @override
   Widget build(BuildContext context) {
-    final os = service.getAll();
-    final abertos = service.byStatus("Em aberto");
-    final execucao = service.byStatus("Em execução");
-    final executadas = service.byStatus("Executada");
-
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-
-    // Pega o usuário logado para mostrar no menu
     final usuarioLogado = UserService().usuario;
+
+    final controller = context.watch<ServiceOrderController>();
+    final os = controller.ordensCadastradas;
+
+    final abertos = os.where((item) => item.status == "Em aberto").toList();
+    final execucao = os.where((item) => item.status == "Em execução").toList();
+    final executadas = os.where((item) => item.status == "Executada").toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -45,10 +62,7 @@ class _DashboardPageState extends State<DashboardPage> {
               decoration: BoxDecoration(color: colorScheme.primary),
               accountName: Text(
                 usuarioLogado?.nome ?? 'Técnico',
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                ),
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
               ),
               accountEmail: Text(
                 usuarioLogado?.email ?? 'tecnico@serviceflow.com',
@@ -68,7 +82,15 @@ class _DashboardPageState extends State<DashboardPage> {
               title: const Text('Novo Cliente'),
               onTap: () {
                 Navigator.pop(context);
-                Navigator.pushReplacementNamed(context, '/cadastro_cliente');
+                Navigator.pushNamed(context, '/cadastro_cliente');
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.engineering),
+              title: const Text('Novo Técnico'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(context, '/cadastro_tecnico'); 
               },
             ),
             ListTile(
@@ -76,9 +98,7 @@ class _DashboardPageState extends State<DashboardPage> {
               title: const Text('Nova Ordem de Serviço'),
               onTap: () {
                 Navigator.pop(context);
-                Navigator.pushNamed(context, '/nova_os').then((_) {
-                  setState(() {});
-                });
+                Navigator.pushNamed(context, '/nova_os'); 
               },
             ),
             ListTile(
@@ -86,9 +106,7 @@ class _DashboardPageState extends State<DashboardPage> {
               title: const Text('Início Ordem de Serviço'),
               onTap: () {
                 Navigator.pop(context);
-                Navigator.pushNamed(context, '/iniciar_os').then((_) {
-                  setState(() {});
-                });
+                Navigator.pushNamed(context, '/iniciar_os');
               },
             ),
             ListTile(
@@ -96,9 +114,7 @@ class _DashboardPageState extends State<DashboardPage> {
               title: const Text('Fim Ordem de Serviço'),
               onTap: () {
                 Navigator.pop(context);
-                Navigator.pushNamed(context, '/finalizar_os').then((_) {
-                  setState(() {});
-                });
+                Navigator.pushNamed(context, '/finalizar_os');
               },
             ),
             const Divider(),
@@ -114,48 +130,50 @@ class _DashboardPageState extends State<DashboardPage> {
         ),
       ),
 
-      body: Padding(
-        padding: const EdgeInsets.all(24),
-        child: GridView.count(
-          crossAxisCount: 2,
-          crossAxisSpacing: 16,
-          mainAxisSpacing: 16,
-          children: [
-            _buildCard(
-              context,
-              title: "Total de OS",
-              quantidade: os.length,
-              valor: service.totalValor(),
-              color: colorScheme.primary,
-              list: os,
+      body: controller.isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Padding(
+              padding: const EdgeInsets.all(24),
+              child: GridView.count(
+                crossAxisCount: 2,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+                children: [
+                  _buildCard(
+                    context,
+                    title: "Total de OS",
+                    quantidade: os.length,
+                    valor: _calcularTotal(os),
+                    color: colorScheme.primary,
+                    list: os,
+                  ),
+                  _buildCard(
+                    context,
+                    title: "Em Aberto",
+                    quantidade: abertos.length,
+                    valor: _calcularTotal(abertos),
+                    color: colorScheme.error,
+                    list: abertos,
+                  ),
+                  _buildCard(
+                    context,
+                    title: "Em Execução",
+                    quantidade: execucao.length,
+                    valor: _calcularTotal(execucao),
+                    color: Colors.orange,
+                    list: execucao,
+                  ),
+                  _buildCard(
+                    context,
+                    title: "Executadas",
+                    quantidade: executadas.length,
+                    valor: _calcularTotal(executadas),
+                    color: Colors.green,
+                    list: executadas,
+                  ),
+                ],
+              ),
             ),
-            _buildCard(
-              context,
-              title: "Em Aberto",
-              quantidade: abertos.length,
-              valor: service.totalValorByStatus("Em aberto"),
-              color: colorScheme.error,
-              list: abertos,
-            ),
-            _buildCard(
-              context,
-              title: "Em Execução",
-              quantidade: execucao.length,
-              valor: service.totalValorByStatus("Em execução"),
-              color: Colors.orange,
-              list: execucao,
-            ),
-            _buildCard(
-              context,
-              title: "Executadas",
-              quantidade: executadas.length,
-              valor: service.totalValorByStatus("Executada"),
-              color: Colors.green,
-              list: executadas,
-            ),
-          ],
-        ),
-      ),
     );
   }
 

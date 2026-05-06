@@ -2,8 +2,11 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../../../core/models/service_order_model.dart';
+import '../../../../core/controllers/cliente_controller.dart';
+import '../../../../core/controllers/tecnico_controller.dart';
 
 class DetalhesOrdemServicoPage extends StatelessWidget {
   final ServiceOrderModel ordem;
@@ -14,6 +17,21 @@ class DetalhesOrdemServicoPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+
+    final clientes = context.read<ClienteController>().clientesCadastrados;
+    final tecnicos = context.read<TecnicoController>().tecnicosCadastrados;
+
+    final clienteNome = clientes
+        .where((c) => c.id == ordem.clienteId)
+        .map((c) => c.nome)
+        .firstWhere((nome) => true, orElse: () => 'Cliente Desconhecido');
+
+    final tecnicoNome = tecnicos
+        .where((t) => t.id == ordem.tecnicoId)
+        .map((t) => t.nome)
+        .firstWhere((nome) => true, orElse: () => 'Técnico Desconhecido');
+
+    final statusOs = ordem.status;
 
     return Scaffold(
       appBar: AppBar(
@@ -30,14 +48,14 @@ class DetalhesOrdemServicoPage extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: _getStatusColor(ordem.status).withAlpha(51),
+                color: _getStatusColor(statusOs).withAlpha(51),
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: _getStatusColor(ordem.status)),
+                border: Border.all(color: _getStatusColor(statusOs)),
               ),
               child: Text(
-                ordem.status,
+                statusOs,
                 style: TextStyle(
-                  color: _getStatusColor(ordem.status),
+                  color: _getStatusColor(statusOs),
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -47,61 +65,52 @@ class DetalhesOrdemServicoPage extends StatelessWidget {
             // Cliente
             _sectionTitle(context, 'Cliente', Icons.person_outline),
             const SizedBox(height: 8),
-            _infoCard(ordem.clienteNome, colorScheme),
+            _infoCard(clienteNome, colorScheme),
+            const SizedBox(height: 20),
+
+            // Técnico
+            _sectionTitle(context, 'Técnico Responsável', Icons.engineering_outlined),
+            const SizedBox(height: 8),
+            _infoCard(tecnicoNome, colorScheme),
             const SizedBox(height: 20),
 
             // Descrição
-            _sectionTitle(
-              context,
-              'Descrição do Serviço',
-              Icons.description_outlined,
-            ),
+            _sectionTitle(context, 'Descrição do Serviço', Icons.description_outlined),
             const SizedBox(height: 8),
-            _infoCard(ordem.descricao, colorScheme),
+            _infoCard(ordem.observacao ?? 'Sem descrição fornecida.', colorScheme),
             const SizedBox(height: 20),
 
             // Valor
             _sectionTitle(context, 'Valor', Icons.attach_money),
             const SizedBox(height: 8),
             _infoCard(
-              'R\$ ${ordem.valor.toStringAsFixed(2)}',
+              'R\$ ${ordem.valorPecas.toStringAsFixed(2)}',
               colorScheme,
               isHighlight: true,
             ),
             const SizedBox(height: 20),
 
             // Foto Antes
-            if (ordem.fotoAntesPath != null &&
-                ordem.fotoAntesPath!.isNotEmpty) ...[
+            if (ordem.fotoAntes != null && ordem.fotoAntes!.isNotEmpty) ...[
               _sectionTitle(context, 'Foto Antes', Icons.photo_camera_outlined),
               const SizedBox(height: 8),
-              _fotoCard(ordem.fotoAntesPath!, colorScheme),
+              _fotoCard(ordem.fotoAntes!, colorScheme),
               const SizedBox(height: 20),
             ],
 
             // Foto Depois
-            if (ordem.fotoDepoisPath != null &&
-                ordem.fotoDepoisPath!.isNotEmpty) ...[
-              _sectionTitle(
-                context,
-                'Foto Depois',
-                Icons.photo_library_outlined,
-              ),
+            if (ordem.fotoDepois != null && ordem.fotoDepois!.isNotEmpty) ...[
+              _sectionTitle(context, 'Foto Depois', Icons.photo_library_outlined),
               const SizedBox(height: 8),
-              _fotoCard(ordem.fotoDepoisPath!, colorScheme),
+              _fotoCard(ordem.fotoDepois!, colorScheme),
               const SizedBox(height: 20),
             ],
 
             // Assinatura
-            if (ordem.assinaturaBase64 != null &&
-                ordem.assinaturaBase64!.isNotEmpty) ...[
-              _sectionTitle(
-                context,
-                'Assinatura do Cliente',
-                Icons.draw_outlined,
-              ),
+            if (ordem.assinatura != null && ordem.assinatura!.isNotEmpty) ...[
+              _sectionTitle(context, 'Assinatura do Cliente', Icons.draw_outlined),
               const SizedBox(height: 8),
-              _assinaturaCard(ordem.assinaturaBase64!, colorScheme),
+              _assinaturaCard(ordem.assinatura!, colorScheme),
             ],
 
             const SizedBox(height: 32),
@@ -120,9 +129,9 @@ class DetalhesOrdemServicoPage extends StatelessWidget {
         Text(
           title,
           style: Theme.of(context).textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w600,
-            color: colorScheme.onSurface,
-          ),
+                fontWeight: FontWeight.w600,
+                color: colorScheme.onSurface,
+              ),
         ),
       ],
     );

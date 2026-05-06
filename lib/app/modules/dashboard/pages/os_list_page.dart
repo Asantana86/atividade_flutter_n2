@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
 import '../../../core/models/service_order_model.dart';
+import '../../../core/controllers/cliente_controller.dart';
 import '../../../shared/app_routes.dart';
 
 class OSListPage extends StatelessWidget {
@@ -7,10 +10,11 @@ class OSListPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final args =
-        ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+    final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
     final String title = args['title'];
     final List<ServiceOrderModel> lista = args['lista'];
+
+    final clientes = context.watch<ClienteController>().clientesCadastrados;
 
     return Scaffold(
       appBar: AppBar(title: Text(title)),
@@ -25,6 +29,12 @@ class OSListPage extends StatelessWidget {
               itemCount: lista.length,
               itemBuilder: (_, i) {
                 final os = lista[i];
+
+                final clienteNome = clientes
+                    .where((c) => c.id == os.clienteId)
+                    .map((c) => c.nome)
+                    .firstWhere((nome) => true, orElse: () => 'Cliente Excluído');
+
                 return Card(
                   margin: const EdgeInsets.symmetric(
                     horizontal: 16,
@@ -33,13 +43,11 @@ class OSListPage extends StatelessWidget {
                   elevation: 2,
                   child: ListTile(
                     leading: CircleAvatar(
-                      backgroundColor: Theme.of(
-                        context,
-                      ).colorScheme.primaryContainer,
+                      backgroundColor: Theme.of(context).colorScheme.primaryContainer,
                       child: const Icon(Icons.assignment),
                     ),
                     title: Text(
-                      os.descricao,
+                      os.observacao ?? 'Serviço sem descrição',
                       style: const TextStyle(fontWeight: FontWeight.bold),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -48,7 +56,7 @@ class OSListPage extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const SizedBox(height: 4),
-                        Text("Cliente: ${os.clienteNome}"),
+                        Text("Cliente: $clienteNome"),
                         Text("Status: ${os.status}"),
                       ],
                     ),
@@ -56,7 +64,7 @@ class OSListPage extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          "R\$ ${os.valor.toStringAsFixed(2)}",
+                          "R\$ ${os.valorPecas.toStringAsFixed(2)}",
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 14,

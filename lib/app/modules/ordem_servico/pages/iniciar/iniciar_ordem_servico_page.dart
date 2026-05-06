@@ -1,14 +1,15 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
 
 import '../../../../core/mixins/loader.mixin.dart';
 import '../../../../core/mixins/messages.mixin.dart';
-import '../../../../core/models/service_order_model.dart';
 import '../../../../core/models/cliente_model.dart';
-import '../../../../core/services/cliente_service.dart';
-import '../../../../core/services/service_order_service.dart';
+import '../../../../core/models/tecnico_model.dart';
+import '../../../../core/controllers/cliente_controller.dart';
+import '../../../../core/controllers/tecnico_controller.dart';
+import '../../../../core/controllers/service_order_controller.dart';
 import '../../../../../app/shared/widgets/custom_button.dart';
 import '../../../../../app/shared/widgets/custom_text_field.dart';
 
@@ -25,9 +26,20 @@ class _IniciarOrdemServicoPageState extends State<IniciarOrdemServicoPage> with 
   final _valorController = TextEditingController();
 
   ClienteModel? _clienteSelecionado;
+  TecnicoModel? _tecnicoSelecionado;
   XFile? _fotoAntes;
 
   final ImagePicker _picker = ImagePicker();
+
+  @override
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<ClienteController>().carregarClientes();
+      context.read<TecnicoController>().carregarTecnicos();
+    });
+  }
 
   @override
   void dispose() {
@@ -122,32 +134,40 @@ class _IniciarOrdemServicoPageState extends State<IniciarOrdemServicoPage> with 
       showError(context, 'Selecione um cliente');
       return;
     }
+    
+    if (_tecnicoSelecionado == null) {
+      showError(context, 'Selecione um técnico');
+      return;
+    }
 
     showLoading(context);
-    await Future.delayed(const Duration(milliseconds: 500));
-
-    if (!mounted) return;
-
-    ServiceOrderService().add(
-      ServiceOrderModel(
-        clienteNome: _clienteSelecionado!.nome,
-        descricao: _descricaoController.text.trim(),
-        valor: double.parse(_valorController.text.trim().replaceAll(',', '.')),
-        status: 'Em aberto',
-        fotoAntesPath: _fotoAntes?.path,
-      ),
+    
+    final controller = context.read<ServiceOrderController>();
+    
+    await controller.salvarOrdemServico(
+      clienteId: _clienteSelecionado!.id!,
+      tecnicoId: _tecnicoSelecionado!.id!,
+      observacao: _descricaoController.text.trim(),
+      valorPecas: double.parse(_valorController.text.trim().replaceAll(',', '.')),
+      fotoAntes: _fotoAntes?.path,
     );
 
+    if (!mounted) return;
     hideLoading(context);
-    showSuccess(context, 'Ordem de serviço iniciada com sucesso!');
-    Navigator.pop(context);
+
+    if (controller.errorMessage != null) {
+      showError(context, controller.errorMessage!);
+    } else if (controller.isSuccess) {
+      showSuccess(context, 'Ordem de serviço iniciada com sucesso!');
+      Navigator.pop(context);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final clientes = ClienteService().getAll();
+    
+    final clientes = context.watch<ClienteController>().clientesCadastrados;
+    final tecnicos = context.watch<TecnicoController>().tecnicosCadastrados;
 
     return Scaffold(
       appBar: AppBar(
@@ -164,26 +184,29 @@ class _IniciarOrdemServicoPageState extends State<IniciarOrdemServicoPage> with 
             children: [
               _sectionLabel('Cliente', Icons.person_outline),
               const SizedBox(height: 8),
-              Container(
-                decoration: BoxDecoration(
-                  color: colorScheme.surfaceContainerHighest.withAlpha(102),
-                  borderRadius: BorderRadius.circular(16),
+              _buildDropdownContainer(
+                child: DropdownButton<ClienteModel>(
+                  value: _clienteSelecionado,
+                  isExpanded: true,
+                  hint: const Text('Selecione o cliente'),
+                  borderRadius: BorderRadius.circular(12),
+                  items: clientes.map((c) => DropdownMenuItem(value: c, child: Text(c.nome))).toList(),
+                  onChanged: (val) => setState(() => _clienteSelecionado = val),
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton<ClienteModel>(
-                    value: _clienteSelecionado,
-                    isExpanded: true,
-                    hint: const Text('Selecione o cliente'),
-                    borderRadius: BorderRadius.circular(12),
-                    items: clientes
-                        .map((c) => DropdownMenuItem(
-                              value: c,
-                              child: Text(c.nome),
-                            ))
-                        .toList(),
-                    onChanged: (val) => setState(() => _clienteSelecionado = val),
-                  ),
+              ),
+
+              const SizedBox(height: 24),
+
+              _sectionLabel('Técnico Responsável', Icons.engineering_outlined),
+              const SizedBox(height: 8),
+              _buildDropdownContainer(
+                child: DropdownButton<TecnicoModel>(
+                  value: _tecnicoSelecionado,
+                  isExpanded: true,
+                  hint: const Text('Selecione o técnico'),
+                  borderRadius: BorderRadius.circular(12),
+                  items: tecnicos.map((t) => DropdownMenuItem(value: t, child: Text(t.nome))).toList(),
+                  onChanged: (val) => setState(() => _tecnicoSelecionado = val),
                 ),
               ),
 
@@ -200,7 +223,7 @@ class _IniciarOrdemServicoPageState extends State<IniciarOrdemServicoPage> with 
 
               const SizedBox(height: 24),
 
-              _sectionLabel('Valor (R)', Icons.attach_money),
+              _sectionLabel('Valor (R\$)', Icons.attach_money),
               const SizedBox(height: 8),
               CustomTextField(
                 controller: _valorController,
@@ -239,6 +262,18 @@ class _IniciarOrdemServicoPageState extends State<IniciarOrdemServicoPage> with 
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildDropdownContainer({required Widget child}) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Container(
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerHighest.withAlpha(102),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: DropdownButtonHideUnderline(child: child),
     );
   }
 

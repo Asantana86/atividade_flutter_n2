@@ -2,17 +2,17 @@ import 'base_model.dart';
 
 class ClienteModel extends BaseModel {
   String nome;
-  String documento; // CPF ou CNPJ
-  String email;
-  String telefone;
+  String? documento;
+  String? telefone;
+  String? email;
 
   ClienteModel({
     super.id,
     super.isSync,
     required this.nome,
-    required this.documento,
-    required this.email,
-    required this.telefone,
+    this.documento,
+    this.telefone,
+    this.email,
   });
 
   @override
@@ -21,20 +21,20 @@ class ClienteModel extends BaseModel {
       'id': id,
       'nome': nome,
       'documento': documento,
-      'email': email,
       'telefone': telefone,
-      'isSync': isSync ? 1 : 0,
+      'email': email,
+      'is_sync': isSync ? 1 : 0, 
     };
   }
 
   factory ClienteModel.fromMap(Map<String, dynamic> map) {
     return ClienteModel(
-      id: map['id'],
-      nome: map['nome'],
-      documento: map['documento'],
-      email: map['email'],
-      telefone: map['telefone'],
-      isSync: map['isSync'] == 1,
+      id: map['id'] as int?,
+      nome: map['nome'] as String,
+      documento: map['documento'] as String?,
+      telefone: map['telefone'] as String?,
+      email: map['email'] as String?,
+      isSync: map['is_sync'] == 1 || map['is_sync'] == true,
     );
   }
 }
