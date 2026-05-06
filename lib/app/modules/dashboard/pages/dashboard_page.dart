@@ -62,7 +62,10 @@ class _DashboardPageState extends State<DashboardPage> {
               decoration: BoxDecoration(color: colorScheme.primary),
               accountName: Text(
                 usuarioLogado?.nome ?? 'Técnico',
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                ),
               ),
               accountEmail: Text(
                 usuarioLogado?.email ?? 'tecnico@serviceflow.com',
@@ -90,15 +93,7 @@ class _DashboardPageState extends State<DashboardPage> {
               title: const Text('Novo Técnico'),
               onTap: () {
                 Navigator.pop(context);
-                Navigator.pushNamed(context, '/cadastro_tecnico'); 
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.assignment_add),
-              title: const Text('Nova Ordem de Serviço'),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.pushNamed(context, '/nova_os'); 
+                Navigator.pushNamed(context, '/cadastro_tecnico');
               },
             ),
             ListTile(
