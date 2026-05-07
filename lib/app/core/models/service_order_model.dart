@@ -6,7 +6,7 @@ class ServiceOrderModel extends BaseModel {
   final String? observacao;
   final String? pecasAplicadas;
   final double valorPecas;
-  final String? fotoAntes;
+  String? fotoAntes;
   String? fotoDepois;
   String? assinatura;
   String status; 

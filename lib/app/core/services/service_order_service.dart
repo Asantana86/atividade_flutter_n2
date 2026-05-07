@@ -8,7 +8,7 @@ class ServiceOrderService {
 
   Future<void> salvarNovaOS(ServiceOrderModel os) async {
 
-    final erroValidacao = _validation.validar(os);
+    final erroValidacao = _validation.validarInicio(os);
     if (erroValidacao != null) {
       throw Exception(erroValidacao);
     }
@@ -31,7 +31,7 @@ class ServiceOrderService {
 
   Future<void> atualizarOS(ServiceOrderModel os) async {
 
-    final erroValidacao = _validation.validar(os);
+    final erroValidacao = _validation.validarFim(os);
     if (erroValidacao != null) {
       throw Exception(erroValidacao);
     }

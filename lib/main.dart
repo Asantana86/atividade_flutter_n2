@@ -9,7 +9,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await Supabase.initialize(
-    url: 'https://satolreskncjkdomaoix.supabase.co/rest/v1/',
+    url: 'https://satolreskncjkdomaoix.supabase.co',
     anonKey:
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNhdG9scmVza25jamtkb21hb2l4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3MzQ0NTAsImV4cCI6MjA5MzMxMDQ1MH0.eY6CPQAeRTuGCtOl6c2_Zd_iCJ4q9wbr0doGbb6aro8',
   );

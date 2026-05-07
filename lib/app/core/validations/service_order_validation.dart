@@ -1,7 +1,7 @@
 import '../models/service_order_model.dart';
 
 class ServiceOrderValidation {
-  String? validar(ServiceOrderModel os) {
+  String? validarInicio(ServiceOrderModel os) {
     if (os.clienteId <= 0) {
       return 'Erro: Cliente inválido ou não selecionado.';
     }
@@ -11,6 +11,11 @@ class ServiceOrderValidation {
     if (os.valorPecas < 0) {
       return 'Erro: O valor das peças não pode ser negativo.';
     }
+
+    return null;
+  }
+
+  String? validarFim(ServiceOrderModel os) {
     if (os.assinatura == null || os.assinatura!.isEmpty) {
       return 'Erro: A assinatura do cliente é obrigatória por lei.';
     }
