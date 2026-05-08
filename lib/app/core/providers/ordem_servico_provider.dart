@@ -1,3 +1,6 @@
+import 'dart:io';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../base/base_provider.dart';
 import '../models/ordem_servico_model.dart';
 
@@ -51,5 +54,42 @@ class OrdemServicoProvider extends BaseProvider<OrdemServicoModel> {
           ? DateTime.parse(data['created_at']) 
           : null,
     );
+  }
+
+  // ==========================================
+  // INTERCEPTAÇÃO DA SINCRONIZAÇÃO
+  // ==========================================
+
+  @override
+  Future<bool> syncToCloud(OrdemServicoModel entity) async {
+    try {
+      entity.fotoAntes = await _uploadImageIfNeeded(entity.fotoAntes, 'antes_os_${entity.id}');
+      entity.fotoDepois = await _uploadImageIfNeeded(entity.fotoDepois, 'depois_os_${entity.id}');
+
+      return await super.syncToCloud(entity);
+    } catch (e) {
+      handleError('syncToCloud - Upload Storage', e);
+      return false;
+    }
+  }
+
+  Future<String> _uploadImageIfNeeded(String? path, String fileNamePrefix) async {
+    if (path == null || path.isEmpty) return '';
+    
+    if (path.startsWith('http')) return path;
+
+    final file = File(path);
+    
+    if (!await file.exists()) return path;
+
+    final supabase = Supabase.instance.client;
+    
+    const bucketName = 'fotos_os'; 
+    
+    final fileName = '${fileNamePrefix}_${DateTime.now().millisecondsSinceEpoch}.jpg';
+
+    await supabase.storage.from(bucketName).upload(fileName, file);
+
+    return supabase.storage.from(bucketName).getPublicUrl(fileName);
   }
 }
