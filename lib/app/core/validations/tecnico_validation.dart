@@ -1,8 +1,9 @@
-import '../base/base.validation.dart';
+import '../base/base_validation.dart';
 import '../models/tecnico_model.dart';
 import '../repositories/tecnico_repository.dart';
 
-class TecnicoValidation extends BaseValidation<TecnicoModel, TecnicoRepository> {
+class TecnicoValidation
+    extends BaseValidation<TecnicoModel, TecnicoRepository> {
   TecnicoValidation(super.repository);
 
   @override
@@ -16,12 +17,8 @@ class TecnicoValidation extends BaseValidation<TecnicoModel, TecnicoRepository> 
   }
 
   @override
-  Future<void> validateRulesCreate(TecnicoModel model) async {
-    
-  }
+  Future<void> validateRulesCreate(TecnicoModel model) async {}
 
   @override
-  Future<void> validateRulesUpdate(TecnicoModel model) async {
-    
-  }
+  Future<void> validateRulesUpdate(TecnicoModel model) async {}
 }

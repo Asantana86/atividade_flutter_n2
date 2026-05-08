@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:signature/signature.dart';
 
-import '../base/base.controller.dart';
+import '../base/base_controller.dart';
 import '../models/cliente_model.dart';
 import '../models/ordem_servico_model.dart';
 import '../repositories/ordem_servico_repository.dart';
@@ -18,12 +18,14 @@ import '../../shared/widgets/custom_image_picker.dart';
 import '../../shared/widgets/custom_signature_pad.dart';
 import '../../shared/widgets/custom_text_field.dart';
 
-class OrdemServicoFinalizarFormController extends BaseController<
-    OrdemServicoModel,
-    OrdemServicoRepository,
-    OrdemServicoValidation,
-    OrdemServicoService> {
-  
+class OrdemServicoFinalizarFormController
+    extends
+        BaseController<
+          OrdemServicoModel,
+          OrdemServicoRepository,
+          OrdemServicoValidation,
+          OrdemServicoService
+        > {
   final ClienteService clienteService;
 
   OrdemServicoFinalizarFormController(
@@ -44,7 +46,8 @@ class _OrdemServicoFinishPage extends StatefulWidget {
   const _OrdemServicoFinishPage({required this.controller});
 
   @override
-  State<_OrdemServicoFinishPage> createState() => _OrdemServicoFinishPageState();
+  State<_OrdemServicoFinishPage> createState() =>
+      _OrdemServicoFinishPageState();
 }
 
 class _OrdemServicoFinishPageState extends State<_OrdemServicoFinishPage> {
@@ -58,7 +61,7 @@ class _OrdemServicoFinishPageState extends State<_OrdemServicoFinishPage> {
 
   List<OrdemServicoModel> ordensAbertas = [];
   List<ClienteModel> clientes = [];
-  
+
   OrdemServicoModel? ordemSelecionada;
   DateTime dataFim = DateTime.now();
   String? fotoDepoisPath;
@@ -79,7 +82,6 @@ class _OrdemServicoFinishPageState extends State<_OrdemServicoFinishPage> {
   }
 
   Future<void> _carregarDadosIniciais() async {
-
     final result = await widget.controller.executeOperation(
       context,
       Future.wait([
@@ -94,7 +96,9 @@ class _OrdemServicoFinishPageState extends State<_OrdemServicoFinishPage> {
         final todasAsOrdens = result[0] as List<OrdemServicoModel>;
         clientes = result[1] as List<ClienteModel>;
 
-        ordensAbertas = todasAsOrdens.where((os) => os.status == StatusOS.emAndamento).toList();
+        ordensAbertas = todasAsOrdens
+            .where((os) => os.status == StatusOS.emAndamento)
+            .toList();
 
         if (widget.controller.model != null) {
           ordemSelecionada = ordensAbertas.firstWhere(
@@ -113,13 +117,18 @@ class _OrdemServicoFinishPageState extends State<_OrdemServicoFinishPage> {
 
   Future<void> _finalizar() async {
     if (ordemSelecionada == null) {
-      widget.controller.showError(context, 'Selecione uma Ordem', 
-          details: 'É necessário escolher qual ordem deseja finalizar.');
+      widget.controller.showError(
+        context,
+        'Selecione uma Ordem',
+        details: 'É necessário escolher qual ordem deseja finalizar.',
+      );
       return;
     }
 
     final signatureBytes = await _signatureController.toPngBytes();
-    String? assinaturaBase64 = signatureBytes != null ? base64Encode(signatureBytes) : null;
+    String? assinaturaBase64 = signatureBytes != null
+        ? base64Encode(signatureBytes)
+        : null;
 
     final osFinalizada = OrdemServicoModel(
       id: ordemSelecionada!.id,
@@ -133,7 +142,7 @@ class _OrdemServicoFinishPageState extends State<_OrdemServicoFinishPage> {
       fotoDepois: fotoDepoisPath ?? '',
       assinatura: assinaturaBase64 ?? '',
       observacaoFinal: _obsController.text,
-      status: StatusOS.finalizado, 
+      status: StatusOS.finalizado,
     );
 
     final success = await widget.controller.executeCrudOperation(
@@ -151,10 +160,7 @@ class _OrdemServicoFinishPageState extends State<_OrdemServicoFinishPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Finalizar Serviço'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Finalizar Serviço'), centerTitle: true),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(

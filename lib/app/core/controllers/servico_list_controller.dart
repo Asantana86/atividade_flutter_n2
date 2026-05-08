@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../base/base.controller.dart';
+import '../base/base_controller.dart';
 import '../models/servico_model.dart';
 import '../repositories/servico_repository.dart';
 import '../services/servico_service.dart';
@@ -9,8 +9,14 @@ import 'servico_form_controller.dart';
 
 import '../../shared/widgets/custom_card.dart';
 
-class ServicoListController extends BaseController<ServicoModel, ServicoRepository, ServicoValidation, ServicoService> {
-  
+class ServicoListController
+    extends
+        BaseController<
+          ServicoModel,
+          ServicoRepository,
+          ServicoValidation,
+          ServicoService
+        > {
   ServicoListController(super.service);
 
   @override
@@ -43,7 +49,7 @@ class _ServicoListPageState extends State<_ServicoListPage> {
       context,
       widget.service.findAllActive(),
     );
-    
+
     if (mounted) {
       setState(() => servicos = result);
     }
@@ -92,8 +98,8 @@ class _ServicoListPageState extends State<_ServicoListPage> {
                 final servico = servicos[index];
                 return CustomCard(
                   title: servico.descricao,
-                  subtitle: servico.tempoEstimado?.isNotEmpty == true 
-                      ? 'Tempo estimado: ${servico.tempoEstimado}' 
+                  subtitle: servico.tempoEstimado?.isNotEmpty == true
+                      ? 'Tempo estimado: ${servico.tempoEstimado}'
                       : 'Tempo não definido',
                   icon: Icons.miscellaneous_services,
                   trailing: Text(

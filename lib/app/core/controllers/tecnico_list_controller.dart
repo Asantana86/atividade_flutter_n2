@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../base/base.controller.dart';
+import '../base/base_controller.dart';
 import '../models/tecnico_model.dart';
 import '../repositories/tecnico_repository.dart';
 import '../services/tecnico_service.dart';
@@ -9,9 +9,14 @@ import 'tecnico_form_controller.dart';
 
 import '../../shared/widgets/custom_card.dart';
 
-
-class TecnicoListController extends BaseController<TecnicoModel, TecnicoRepository, TecnicoValidation, TecnicoService> {
-  
+class TecnicoListController
+    extends
+        BaseController<
+          TecnicoModel,
+          TecnicoRepository,
+          TecnicoValidation,
+          TecnicoService
+        > {
   TecnicoListController(super.service);
 
   @override
@@ -44,7 +49,7 @@ class _TecnicoListPageState extends State<_TecnicoListPage> {
       context,
       widget.service.findAllActive(),
     );
-    
+
     if (mounted) {
       setState(() => tecnicos = result);
     }
@@ -56,7 +61,8 @@ class _TecnicoListPageState extends State<_TecnicoListPage> {
       widget.service.softDelete(tecnico.id!),
       requiresConfirmation: true,
       confirmTitle: 'Excluir Técnico',
-      confirmMessage: 'Tem certeza que deseja excluir o técnico ${tecnico.nome}?',
+      confirmMessage:
+          'Tem certeza que deseja excluir o técnico ${tecnico.nome}?',
       successMessage: 'Técnico excluído com sucesso!',
     );
 
@@ -81,10 +87,7 @@ class _TecnicoListPageState extends State<_TecnicoListPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Técnicos'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Técnicos'), centerTitle: true),
       body: tecnicos.isEmpty
           ? const Center(child: Text('Nenhum técnico encontrado.'))
           : ListView.builder(
@@ -93,8 +96,8 @@ class _TecnicoListPageState extends State<_TecnicoListPage> {
                 final tecnico = tecnicos[index];
                 return CustomCard(
                   title: tecnico.nome,
-                  subtitle: tecnico.especialidade?.isNotEmpty == true 
-                      ? tecnico.especialidade! 
+                  subtitle: tecnico.especialidade?.isNotEmpty == true
+                      ? tecnico.especialidade!
                       : 'Sem especialidade definida',
                   icon: Icons.engineering,
                   onEdit: () => _navegarParaFormulario(tecnico),

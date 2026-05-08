@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../base/base.controller.dart';
+import '../base/base_controller.dart';
 import '../models/tecnico_model.dart';
 import '../repositories/tecnico_repository.dart';
 import '../services/tecnico_service.dart';
@@ -9,8 +9,14 @@ import '../validations/tecnico_validation.dart';
 import '../../shared/widgets/custom_text_field.dart';
 import '../../shared/widgets/custom_elevated_button.dart';
 
-class TecnicoFormController extends BaseController<TecnicoModel, TecnicoRepository, TecnicoValidation, TecnicoService> {
-  
+class TecnicoFormController
+    extends
+        BaseController<
+          TecnicoModel,
+          TecnicoRepository,
+          TecnicoValidation,
+          TecnicoService
+        > {
   TecnicoFormController(super.service, {super.model});
 
   @override
@@ -63,17 +69,21 @@ class _TecnicoFormPageState extends State<_TecnicoFormPage> {
       isSync: widget.model?.isSync ?? 0,
       ativo: widget.model?.ativo ?? true,
       nome: _nomeController.text,
-      especialidade: _especialidadeController.text.trim().isEmpty ? null : _especialidadeController.text,
+      especialidade: _especialidadeController.text.trim().isEmpty
+          ? null
+          : _especialidadeController.text,
     );
 
-    final operation = isEditing 
-        ? widget.service.update(tecnico) 
+    final operation = isEditing
+        ? widget.service.update(tecnico)
         : widget.service.create(tecnico);
 
     final success = await widget.controller.executeCrudOperation(
       context,
       operation,
-      loadingMessage: isEditing ? 'Atualizando técnico...' : 'Salvando técnico...',
+      loadingMessage: isEditing
+          ? 'Atualizando técnico...'
+          : 'Salvando técnico...',
       successMessage: 'Técnico salvo com sucesso!',
     );
 

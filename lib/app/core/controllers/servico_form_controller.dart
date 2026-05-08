@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../base/base.controller.dart';
+import '../base/base_controller.dart';
 import '../models/servico_model.dart';
 import '../repositories/servico_repository.dart';
 import '../services/servico_service.dart';
@@ -9,8 +9,14 @@ import '../validations/servico_validation.dart';
 import '../../shared/widgets/custom_text_field.dart';
 import '../../shared/widgets/custom_elevated_button.dart';
 
-class ServicoFormController extends BaseController<ServicoModel, ServicoRepository, ServicoValidation, ServicoService> {
-  
+class ServicoFormController
+    extends
+        BaseController<
+          ServicoModel,
+          ServicoRepository,
+          ServicoValidation,
+          ServicoService
+        > {
   ServicoFormController(super.service, {super.model});
 
   @override
@@ -60,8 +66,8 @@ class _ServicoFormPageState extends State<_ServicoFormPage> {
   }
 
   Future<void> _salvar() async {
-    
-    final precoDouble = double.tryParse(_precoController.text.replaceAll(',', '.')) ?? 0.0;
+    final precoDouble =
+        double.tryParse(_precoController.text.replaceAll(',', '.')) ?? 0.0;
 
     final servico = ServicoModel(
       id: widget.model?.id,
@@ -70,17 +76,21 @@ class _ServicoFormPageState extends State<_ServicoFormPage> {
       ativo: widget.model?.ativo ?? true,
       descricao: _descricaoController.text,
       preco: precoDouble,
-      tempoEstimado: _tempoController.text.trim().isEmpty ? null : _tempoController.text,
+      tempoEstimado: _tempoController.text.trim().isEmpty
+          ? null
+          : _tempoController.text,
     );
 
-    final operation = isEditing 
-        ? widget.service.update(servico) 
+    final operation = isEditing
+        ? widget.service.update(servico)
         : widget.service.create(servico);
 
     final success = await widget.controller.executeCrudOperation(
       context,
       operation,
-      loadingMessage: isEditing ? 'A atualizar serviço...' : 'A gravar serviço...',
+      loadingMessage: isEditing
+          ? 'A atualizar serviço...'
+          : 'A gravar serviço...',
       successMessage: 'Serviço gravado com sucesso!',
     );
 
@@ -111,7 +121,9 @@ class _ServicoFormPageState extends State<_ServicoFormPage> {
               hint: '0.00',
               controller: _precoController,
               prefixIcon: Icons.attach_money,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
             ),
             const SizedBox(height: 16),
             CustomTextField(

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-import '../base/base.controller.dart';
+import '../base/base_controller.dart';
 import '../models/cliente_model.dart';
 import '../models/ordem_servico_model.dart';
 import '../models/servico_model.dart';
@@ -18,12 +18,14 @@ import '../../shared/widgets/custom_elevated_button.dart';
 import '../../shared/widgets/custom_image_picker.dart';
 import '../../shared/widgets/custom_date_picker.dart';
 
-class OrdemServicoIniciarFormController extends BaseController<
-    OrdemServicoModel,
-    OrdemServicoRepository,
-    OrdemServicoValidation,
-    OrdemServicoService> {
-
+class OrdemServicoIniciarFormController
+    extends
+        BaseController<
+          OrdemServicoModel,
+          OrdemServicoRepository,
+          OrdemServicoValidation,
+          OrdemServicoService
+        > {
   final ClienteService clienteService;
   final TecnicoService tecnicoService;
   final ServicoService servicoService;
@@ -52,7 +54,6 @@ class _OrdemServicoStartPage extends StatefulWidget {
 }
 
 class _OrdemServicoStartPageState extends State<_OrdemServicoStartPage> {
-
   final _dataInicioController = TextEditingController();
 
   List<ClienteModel> clientes = [];
@@ -97,22 +98,35 @@ class _OrdemServicoStartPageState extends State<_OrdemServicoStartPage> {
 
         if (widget.controller.model != null) {
           final m = widget.controller.model!;
-          clienteSelecionado = clientes.where((c) => c.id == m.clienteId).firstOrNull;
-          tecnicoSelecionado = tecnicos.where((t) => t.id == m.tecnicoId).firstOrNull;
-          servicoSelecionado = servicos.where((s) => s.id == m.servicoId).firstOrNull;
+          clienteSelecionado = clientes
+              .where((c) => c.id == m.clienteId)
+              .firstOrNull;
+          tecnicoSelecionado = tecnicos
+              .where((t) => t.id == m.tecnicoId)
+              .firstOrNull;
+          servicoSelecionado = servicos
+              .where((s) => s.id == m.servicoId)
+              .firstOrNull;
           fotoAntesPath = m.fotoAntes;
           dataInicio = m.dataInicio;
-          
-          _dataInicioController.text = DateFormat('dd/MM/yyyy').format(dataInicio);
+
+          _dataInicioController.text = DateFormat(
+            'dd/MM/yyyy',
+          ).format(dataInicio);
         }
       });
     }
   }
 
   Future<void> _salvar() async {
-    if (clienteSelecionado == null || tecnicoSelecionado == null || servicoSelecionado == null) {
-      widget.controller.showError(context, 'Campos Obrigatórios', 
-          details: 'Selecione o cliente, técnico e serviço para continuar.');
+    if (clienteSelecionado == null ||
+        tecnicoSelecionado == null ||
+        servicoSelecionado == null) {
+      widget.controller.showError(
+        context,
+        'Campos Obrigatórios',
+        details: 'Selecione o cliente, técnico e serviço para continuar.',
+      );
       return;
     }
 
@@ -195,7 +209,9 @@ class _OrdemServicoStartPageState extends State<_OrdemServicoStartPage> {
             ),
             const SizedBox(height: 32),
             CustomElevatedButton(
-              text: widget.controller.model != null ? 'Atualizar Ordem' : 'Abrir Ordem de Serviço',
+              text: widget.controller.model != null
+                  ? 'Atualizar Ordem'
+                  : 'Abrir Ordem de Serviço',
               icon: Icons.play_arrow,
               onPressed: _salvar,
             ),

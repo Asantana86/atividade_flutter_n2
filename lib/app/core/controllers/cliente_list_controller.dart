@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../base/base.controller.dart';
+import '../base/base_controller.dart';
 import '../models/cliente_model.dart';
 import '../repositories/cliente_repository.dart';
 import '../services/cliente_service.dart';
@@ -9,8 +9,14 @@ import 'cliente_form_controller.dart';
 
 import '../../shared/widgets/custom_card.dart';
 
-class ClienteListController extends BaseController<ClienteModel, ClienteRepository, ClienteValidation, ClienteService> {
-  
+class ClienteListController
+    extends
+        BaseController<
+          ClienteModel,
+          ClienteRepository,
+          ClienteValidation,
+          ClienteService
+        > {
   ClienteListController(super.service);
 
   @override
@@ -35,7 +41,10 @@ class _ClienteListPageState extends State<_ClienteListPage> {
   @override
   void initState() {
     super.initState();
-    _carregarClientes();
+    // Pede para o Flutter esperar a tela ser desenhada para só então carregar os dados
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _carregarClientes();
+    });
   }
 
   Future<void> _carregarClientes() async {
@@ -43,7 +52,7 @@ class _ClienteListPageState extends State<_ClienteListPage> {
       context,
       widget.service.findAllActive(),
     );
-    
+
     if (mounted) {
       setState(() => clientes = result);
     }
@@ -55,7 +64,8 @@ class _ClienteListPageState extends State<_ClienteListPage> {
       widget.service.softDelete(cliente.id!),
       requiresConfirmation: true,
       confirmTitle: 'Excluir Cliente',
-      confirmMessage: 'Tem certeza que deseja excluir o cliente ${cliente.nome}?',
+      confirmMessage:
+          'Tem certeza que deseja excluir o cliente ${cliente.nome}?',
       successMessage: 'Cliente excluído com sucesso!',
     );
 
@@ -80,10 +90,7 @@ class _ClienteListPageState extends State<_ClienteListPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Clientes'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Clientes'), centerTitle: true),
       body: clientes.isEmpty
           ? const Center(child: Text('Nenhum cliente encontrado.'))
           : ListView.builder(
@@ -92,7 +99,8 @@ class _ClienteListPageState extends State<_ClienteListPage> {
                 final cliente = clientes[index];
                 return CustomCard(
                   title: cliente.nome,
-                  subtitle: 'Doc: ${cliente.documento}\nTel: ${cliente.telefone}',
+                  subtitle:
+                      'Doc: ${cliente.documento}\nTel: ${cliente.telefone}',
                   icon: Icons.business_center,
                   onEdit: () => _navegarParaFormulario(cliente),
                   onDelete: () => _excluirCliente(cliente),

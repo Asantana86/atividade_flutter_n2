@@ -4,8 +4,6 @@ import '../http/app_client.dart';
 import '../logging/log_service.dart';
 import 'base_model.dart';
 
-
-
 /// BaseProvider - Abstração para comunicação com APIs externas
 ///
 /// Responsabilidades:
@@ -53,7 +51,7 @@ abstract class BaseProvider<E extends BaseModel> {
   Future<List<E>> fetchFromCloud({DateTime? lastSync}) async {
     try {
       final queryParams = lastSync != null
-          ? '?updated_at=gte.${lastSync.toIso8601String()}'
+          ? '?created_at=gte.${lastSync.toIso8601String()}'
           : '';
 
       final response = await _client.get('$endpoint$queryParams');

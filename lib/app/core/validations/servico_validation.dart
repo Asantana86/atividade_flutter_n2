@@ -1,8 +1,9 @@
-import '../base/base.validation.dart';
+import '../base/base_validation.dart';
 import '../models/servico_model.dart';
 import '../repositories/servico_repository.dart';
 
-class ServicoValidation extends BaseValidation<ServicoModel, ServicoRepository> {
+class ServicoValidation
+    extends BaseValidation<ServicoModel, ServicoRepository> {
   ServicoValidation(super.repository);
 
   @override
@@ -20,12 +21,8 @@ class ServicoValidation extends BaseValidation<ServicoModel, ServicoRepository> 
   }
 
   @override
-  Future<void> validateRulesCreate(ServicoModel model) async {
-    
-  }
+  Future<void> validateRulesCreate(ServicoModel model) async {}
 
   @override
-  Future<void> validateRulesUpdate(ServicoModel model) async {
-    
-  }
+  Future<void> validateRulesUpdate(ServicoModel model) async {}
 }

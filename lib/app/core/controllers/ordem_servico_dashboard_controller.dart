@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../base/base.controller.dart';
+import '../base/base_controller.dart';
 import '../models/ordem_servico_model.dart';
 import '../repositories/ordem_servico_repository.dart';
 import '../services/cliente_service.dart';
@@ -11,8 +11,14 @@ import '../validations/ordem_servico_validation.dart';
 import 'ordem_servico_list_view.dart';
 import 'ordem_servico_iniciar_form_controller.dart';
 
-class OrdemServicoDashboardController extends BaseController<OrdemServicoModel, OrdemServicoRepository, OrdemServicoValidation, OrdemServicoService> {
-  
+class OrdemServicoDashboardController
+    extends
+        BaseController<
+          OrdemServicoModel,
+          OrdemServicoRepository,
+          OrdemServicoValidation,
+          OrdemServicoService
+        > {
   final ClienteService clienteService;
   final TecnicoService tecnicoService;
   final ServicoService servicoService;
@@ -43,15 +49,18 @@ class OrdemServicoDashboardController extends BaseController<OrdemServicoModel, 
         ),
         body: TabBarView(
           children: [
-            OrdemServicoListView(controller: this, status: null), 
-            OrdemServicoListView(controller: this, status: StatusOS.emAndamento),
+            OrdemServicoListView(controller: this, status: null),
+            OrdemServicoListView(
+              controller: this,
+              status: StatusOS.emAndamento,
+            ),
             OrdemServicoListView(controller: this, status: StatusOS.finalizado),
             OrdemServicoListView(controller: this, status: StatusOS.cancelado),
           ],
         ),
         floatingActionButton: FloatingActionButton.extended(
           onPressed: () => Navigator.push(
-            context, 
+            context,
             MaterialPageRoute(
               builder: (_) => OrdemServicoIniciarFormController(
                 service,

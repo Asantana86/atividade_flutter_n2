@@ -1,13 +1,13 @@
-import '../base/base.validation.dart';
+import '../base/base_validation.dart';
 import '../models/ordem_servico_model.dart';
 import '../repositories/ordem_servico_repository.dart';
 
-class OrdemServicoValidation extends BaseValidation<OrdemServicoModel, OrdemServicoRepository> {
+class OrdemServicoValidation
+    extends BaseValidation<OrdemServicoModel, OrdemServicoRepository> {
   OrdemServicoValidation(super.repository);
 
   @override
   void validateFields(OrdemServicoModel? model) {
-
     super.validateFields(model);
     final os = model!;
 
@@ -27,35 +27,35 @@ class OrdemServicoValidation extends BaseValidation<OrdemServicoModel, OrdemServ
 
   @override
   Future<void> validateFieldUpdate(OrdemServicoModel model) async {
-
     await super.validateFieldUpdate(model);
 
     if (model.status == StatusOS.finalizado) {
-      
       if (model.dataFim == null) {
         throw Exception("A data de término é obrigatória para finalizar a OS.");
       }
       if (model.dataFim!.isBefore(model.dataInicio)) {
-        throw Exception("A data de término não pode ser menor que a data de início.");
+        throw Exception(
+          "A data de término não pode ser menor que a data de início.",
+        );
       }
 
       if (model.fotoDepois == null || model.fotoDepois!.trim().isEmpty) {
-        throw Exception("A foto final (Depois) é obrigatória para finalizar a OS.");
+        throw Exception(
+          "A foto final (Depois) é obrigatória para finalizar a OS.",
+        );
       }
 
       if (model.assinatura == null || model.assinatura!.trim().isEmpty) {
-        throw Exception("A assinatura do cliente é obrigatória para finalizar a OS.");
+        throw Exception(
+          "A assinatura do cliente é obrigatória para finalizar a OS.",
+        );
       }
     }
   }
 
   @override
-  Future<void> validateRulesCreate(OrdemServicoModel model) async {
-    
-  }
+  Future<void> validateRulesCreate(OrdemServicoModel model) async {}
 
   @override
-  Future<void> validateRulesUpdate(OrdemServicoModel model) async {
-    
-  }
+  Future<void> validateRulesUpdate(OrdemServicoModel model) async {}
 }

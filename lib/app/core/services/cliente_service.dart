@@ -1,10 +1,10 @@
-import '../base/base.service.dart';
+import '../base/base_service.dart';
 import '../models/cliente_model.dart';
 import '../repositories/cliente_repository.dart';
 import '../validations/cliente_validation.dart';
 
-class ClienteService extends BaseService<ClienteModel, ClienteRepository, ClienteValidation> {
-  
+class ClienteService
+    extends BaseService<ClienteModel, ClienteRepository, ClienteValidation> {
   ClienteService(super.validation, super.repository);
 
   @override

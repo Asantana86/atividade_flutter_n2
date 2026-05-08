@@ -1,9 +1,12 @@
-import 'base.validation.dart';
+import 'base_validation.dart';
 import 'base_model.dart';
 import 'base_repository.dart';
 
-abstract class BaseService<E extends BaseModel, R extends BaseRepository<E>,
-    V extends BaseValidation<E, R>> {
+abstract class BaseService<
+  E extends BaseModel,
+  R extends BaseRepository<E>,
+  V extends BaseValidation<E, R>
+> {
   final V validation;
   final R repository;
 

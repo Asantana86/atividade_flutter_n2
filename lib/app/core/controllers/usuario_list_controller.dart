@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../base/base.controller.dart';
+import '../base/base_controller.dart';
 import '../models/usuario_model.dart';
 import '../repositories/usuario_repository.dart';
 import '../validations/usuario_validation.dart';
@@ -9,8 +9,14 @@ import 'usuario_form_controller.dart';
 
 import '../../shared/widgets/custom_card.dart';
 
-class UsuarioListController extends BaseController<UsuarioModel, UsuarioRepository, UsuarioValidation, UsuarioService> {
-  
+class UsuarioListController
+    extends
+        BaseController<
+          UsuarioModel,
+          UsuarioRepository,
+          UsuarioValidation,
+          UsuarioService
+        > {
   UsuarioListController(super.service);
 
   @override
@@ -45,7 +51,7 @@ class _UsuarioListPageState extends State<_UsuarioListPage> {
       context,
       widget.service.findAllActive(),
     );
-    
+
     if (mounted) {
       setState(() => usuarios = result);
     }
@@ -58,7 +64,8 @@ class _UsuarioListPageState extends State<_UsuarioListPage> {
       widget.service.softDelete(usuario.id!),
       requiresConfirmation: true,
       confirmTitle: 'Excluir Usuário',
-      confirmMessage: 'Tem certeza que deseja excluir o usuário ${usuario.nome}?',
+      confirmMessage:
+          'Tem certeza que deseja excluir o usuário ${usuario.nome}?',
       successMessage: 'Usuário excluído com sucesso!',
     );
 
@@ -68,7 +75,7 @@ class _UsuarioListPageState extends State<_UsuarioListPage> {
   }
 
   void _navegarParaFormulario([UsuarioModel? model]) async {
-    // Navega para a tela de form e aguarda o retorno. 
+    // Navega para a tela de form e aguarda o retorno.
     // Se retornar true (salvou), recarrega a lista.
     final recarregar = await Navigator.push<bool>(
       context,
@@ -85,10 +92,7 @@ class _UsuarioListPageState extends State<_UsuarioListPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Usuários'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Usuários'), centerTitle: true),
       body: usuarios.isEmpty
           ? const Center(child: Text('Nenhum usuário encontrado.'))
           : ListView.builder(

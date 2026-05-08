@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../mixins/loader.mixin.dart';
 import '../mixins/messages.mixin.dart';
-import 'base.service.dart';
-import 'base.validation.dart';
+import 'base_service.dart';
+import 'base_validation.dart';
 import 'base_model.dart';
 import 'base_repository.dart';
 
@@ -11,9 +11,14 @@ import 'base_repository.dart';
 ///
 /// Automaticamente inclui LoaderMixin e MessagesMixin para todas as subclasses
 /// Subclasses podem chamar diretamente: showLoading(), showSuccess(), withLoading(), etc.
-abstract class BaseController<E extends BaseModel, R extends BaseRepository<E>,
-        V extends BaseValidation<E, R>, S extends BaseService<E, R, V>>
-    extends StatelessWidget with LoaderMixin, MessagesMixin {
+abstract class BaseController<
+  E extends BaseModel,
+  R extends BaseRepository<E>,
+  V extends BaseValidation<E, R>,
+  S extends BaseService<E, R, V>
+>
+    extends StatelessWidget
+    with LoaderMixin, MessagesMixin {
   final S service;
   final E? model;
 
@@ -43,23 +48,23 @@ abstract class BaseController<E extends BaseModel, R extends BaseRepository<E>,
     try {
       showLoading(context, message: loadingMessage ?? 'Processando...');
       final result = await operation;
-      
+
       // Remove loading em caso de sucesso
       hideLoading(context);
-      
+
       // Mostra mensagem de sucesso se solicitado
       if (showSuccessMessage && successMessage != null) {
         showSuccess(context, successMessage);
       }
-      
+
       return result;
     } catch (e) {
       // Remove loading em caso de erro
       hideLoading(context);
-      
+
       // Converte todas as exceções para mensagem de erro
       _handleException(context, e);
-      
+
       return null;
     }
   }
@@ -74,7 +79,7 @@ abstract class BaseController<E extends BaseModel, R extends BaseRepository<E>,
     try {
       showLoading(context, message: loadingMessage ?? 'Carregando...');
       final result = await operation;
-      
+
       hideLoading(context);
       return result;
     } catch (e) {
@@ -101,20 +106,20 @@ abstract class BaseController<E extends BaseModel, R extends BaseRepository<E>,
         confirmTitle ?? 'Confirmar Operação',
         confirmMessage ?? 'Tem certeza que deseja continuar?',
       );
-      
+
       if (confirmed != true) return false;
     }
 
     try {
       showLoading(context, message: loadingMessage ?? 'Processando...');
       await operation;
-      
+
       hideLoading(context);
-      
+
       if (successMessage != null) {
         showSuccess(context, successMessage);
       }
-      
+
       return true;
     } catch (e) {
       hideLoading(context);
@@ -125,7 +130,11 @@ abstract class BaseController<E extends BaseModel, R extends BaseRepository<E>,
 
   /// Tratamento centralizado de todas as exceções
   /// Converte exceções de Repository, Validation, Service e bibliotecas em mensagens de erro
-  void _handleException(BuildContext context, dynamic exception, {String? customMessage}) {
+  void _handleException(
+    BuildContext context,
+    dynamic exception, {
+    String? customMessage,
+  }) {
     String errorMessage;
     String? errorDetails;
 
@@ -141,18 +150,18 @@ abstract class BaseController<E extends BaseModel, R extends BaseRepository<E>,
     } else if (exception is TypeError) {
       errorMessage = 'Erro de tipo de dados';
       errorDetails = exception.toString();
-    } else if (exception.toString().contains('SQL') || 
-               exception.toString().contains('database') ||
-               exception.toString().contains('sqlite')) {
+    } else if (exception.toString().contains('SQL') ||
+        exception.toString().contains('database') ||
+        exception.toString().contains('sqlite')) {
       errorMessage = 'Erro no banco de dados';
       errorDetails = exception.toString();
     } else if (exception.toString().contains('HTTP') ||
-               exception.toString().contains('Connection') ||
-               exception.toString().contains('network')) {
+        exception.toString().contains('Connection') ||
+        exception.toString().contains('network')) {
       errorMessage = 'Erro de conexão com servidor';
       errorDetails = exception.toString();
     } else if (exception.toString().contains('validation') ||
-               exception.toString().contains('Validation')) {
+        exception.toString().contains('Validation')) {
       errorMessage = 'Erro de validação';
       errorDetails = exception.toString();
     } else {

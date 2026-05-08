@@ -1,10 +1,10 @@
-import '../base/base.service.dart';
+import '../base/base_service.dart';
 import '../models/servico_model.dart';
 import '../repositories/servico_repository.dart';
 import '../validations/servico_validation.dart';
 
-class ServicoService extends BaseService<ServicoModel, ServicoRepository, ServicoValidation> {
-  
+class ServicoService
+    extends BaseService<ServicoModel, ServicoRepository, ServicoValidation> {
   ServicoService(super.validation, super.repository);
 
   @override

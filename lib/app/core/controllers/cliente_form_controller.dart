@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../base/base.controller.dart';
+import '../base/base_controller.dart';
 import '../models/cliente_model.dart';
 import '../repositories/cliente_repository.dart';
 import '../validations/cliente_validation.dart';
@@ -9,8 +9,14 @@ import '../services/cliente_service.dart';
 import '../../shared/widgets/custom_text_field.dart';
 import '../../shared/widgets/custom_elevated_button.dart';
 
-class ClienteFormController extends BaseController<ClienteModel, ClienteRepository, ClienteValidation, ClienteService> {
-  
+class ClienteFormController
+    extends
+        BaseController<
+          ClienteModel,
+          ClienteRepository,
+          ClienteValidation,
+          ClienteService
+        > {
   ClienteFormController(super.service, {super.model});
 
   @override
@@ -71,17 +77,21 @@ class _ClienteFormPageState extends State<_ClienteFormPage> {
       nome: _nomeController.text,
       documento: _documentoController.text,
       telefone: _telefoneController.text,
-      email: _emailController.text.trim().isEmpty ? null : _emailController.text,
+      email: _emailController.text.trim().isEmpty
+          ? null
+          : _emailController.text,
     );
 
-    final operation = isEditing 
-        ? widget.service.update(cliente) 
+    final operation = isEditing
+        ? widget.service.update(cliente)
         : widget.service.create(cliente);
 
     final success = await widget.controller.executeCrudOperation(
       context,
       operation,
-      loadingMessage: isEditing ? 'Atualizando cliente...' : 'Salvando cliente...',
+      loadingMessage: isEditing
+          ? 'Atualizando cliente...'
+          : 'Salvando cliente...',
       successMessage: 'Cliente salvo com sucesso!',
     );
 

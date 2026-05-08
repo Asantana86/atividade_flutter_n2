@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../base/base.controller.dart';
+import '../base/base_controller.dart';
 import '../models/usuario_model.dart';
 import '../repositories/usuario_repository.dart';
 import '../services/usuario_service.dart';
@@ -9,8 +9,14 @@ import '../validations/usuario_validation.dart';
 import '../../shared/widgets/custom_text_field.dart';
 import '../../shared/widgets/custom_elevated_button.dart';
 
-class UsuarioFormController extends BaseController<UsuarioModel, UsuarioRepository, UsuarioValidation, UsuarioService> {
-  
+class UsuarioFormController
+    extends
+        BaseController<
+          UsuarioModel,
+          UsuarioRepository,
+          UsuarioValidation,
+          UsuarioService
+        > {
   // Recebe o model de forma opcional (se vier nulo, é cadastro; se vier preenchido, é edição)
   UsuarioFormController(super.service, {super.model});
 
@@ -62,7 +68,6 @@ class _UsuarioFormPageState extends State<_UsuarioFormPage> {
   }
 
   Future<void> _salvar() async {
-
     final usuario = UsuarioModel(
       id: widget.model?.id,
       createdAt: widget.model?.createdAt,
@@ -73,14 +78,16 @@ class _UsuarioFormPageState extends State<_UsuarioFormPage> {
       senha: _senhaController.text,
     );
 
-    final operation = isEditing 
-        ? widget.service.update(usuario) 
+    final operation = isEditing
+        ? widget.service.update(usuario)
         : widget.service.create(usuario);
 
     final success = await widget.controller.executeCrudOperation(
       context,
       operation,
-      loadingMessage: isEditing ? 'Atualizando usuário...' : 'Salvando usuário...',
+      loadingMessage: isEditing
+          ? 'Atualizando usuário...'
+          : 'Salvando usuário...',
       successMessage: 'Usuário salvo com sucesso!',
     );
 
@@ -115,7 +122,9 @@ class _UsuarioFormPageState extends State<_UsuarioFormPage> {
             const SizedBox(height: 16),
             CustomTextField(
               label: 'Senha',
-              hint: isEditing ? 'Digite para alterar a senha' : 'Crie uma senha forte',
+              hint: isEditing
+                  ? 'Digite para alterar a senha'
+                  : 'Crie uma senha forte',
               controller: _senhaController,
               prefixIcon: Icons.lock,
               isPassword: true,

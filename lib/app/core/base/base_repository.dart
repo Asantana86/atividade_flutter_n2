@@ -1,9 +1,8 @@
 import 'package:sqflite/sqflite.dart';
 import 'base_model.dart';
-import '../services/database_helper.dart';
+import '../helpers/database_helper.dart';
 
 abstract class BaseRepository<E extends BaseModel> {
-  
   final _dbHelper = DatabaseHelper.instance;
 
   String get tableName;
@@ -29,8 +28,10 @@ abstract class BaseRepository<E extends BaseModel> {
 
   Future<List<E>> findAll() async {
     final db = await _dbHelper.database;
-    final List<Map<String, dynamic>> result =
-        await db.query(tableName, orderBy: 'id DESC');
+    final List<Map<String, dynamic>> result = await db.query(
+      tableName,
+      orderBy: 'id DESC',
+    );
 
     return result.map((map) => fromMap(map)).toList();
   }
@@ -61,11 +62,7 @@ abstract class BaseRepository<E extends BaseModel> {
 
   Future<E?> findById(int id) async {
     final db = await _dbHelper.database;
-    final result = await db.query(
-      tableName,
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    final result = await db.query(tableName, where: 'id = ?', whereArgs: [id]);
 
     if (result.isNotEmpty) {
       return fromMap(result.first);
@@ -107,21 +104,14 @@ abstract class BaseRepository<E extends BaseModel> {
 
   Future<int> delete(int id) async {
     final db = await _dbHelper.database;
-    return await db.delete(
-      tableName,
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    return await db.delete(tableName, where: 'id = ?', whereArgs: [id]);
   }
 
   Future<int> softDelete(int id) async {
     final db = await _dbHelper.database;
     return await db.update(
       tableName,
-      {
-        'ativo': 0,
-        'is_sync': 0
-      },
+      {'ativo': 0, 'is_sync': 0},
       where: 'id = ?',
       whereArgs: [id],
     );
@@ -131,10 +121,7 @@ abstract class BaseRepository<E extends BaseModel> {
     final db = await _dbHelper.database;
     return await db.update(
       tableName,
-      {
-        'ativo': 1,
-        'is_sync': 0
-      },
+      {'ativo': 1, 'is_sync': 0},
       where: 'id = ?',
       whereArgs: [id],
     );
@@ -154,5 +141,4 @@ abstract class BaseRepository<E extends BaseModel> {
   }
 
   E fromMap(Map<String, dynamic> map);
-  
 }

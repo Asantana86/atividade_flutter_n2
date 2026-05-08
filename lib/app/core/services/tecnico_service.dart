@@ -1,10 +1,10 @@
-import '../base/base.service.dart';
+import '../base/base_service.dart';
 import '../models/tecnico_model.dart';
 import '../repositories/tecnico_repository.dart';
 import '../validations/tecnico_validation.dart';
 
-class TecnicoService extends BaseService<TecnicoModel, TecnicoRepository, TecnicoValidation> {
-  
+class TecnicoService
+    extends BaseService<TecnicoModel, TecnicoRepository, TecnicoValidation> {
   TecnicoService(super.validation, super.repository);
 
   @override

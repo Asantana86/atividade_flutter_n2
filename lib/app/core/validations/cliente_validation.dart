@@ -1,8 +1,9 @@
-import '../base/base.validation.dart';
+import '../base/base_validation.dart';
 import '../models/cliente_model.dart';
 import '../repositories/cliente_repository.dart';
 
-class ClienteValidation extends BaseValidation<ClienteModel, ClienteRepository> {
+class ClienteValidation
+    extends BaseValidation<ClienteModel, ClienteRepository> {
   ClienteValidation(super.repository);
 
   @override
@@ -31,7 +32,9 @@ class ClienteValidation extends BaseValidation<ClienteModel, ClienteRepository> 
     }
 
     if (cliente.email != null && cliente.email!.trim().isNotEmpty) {
-      final emailRegex = RegExp(r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+");
+      final emailRegex = RegExp(
+        r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+",
+      );
       if (!emailRegex.hasMatch(cliente.email!)) {
         throw Exception("Informe um e-mail válido.");
       }
@@ -40,7 +43,9 @@ class ClienteValidation extends BaseValidation<ClienteModel, ClienteRepository> 
 
   @override
   Future<void> validateRulesCreate(ClienteModel model) async {
-    final docExiste = await repository.exists("documento = ?", [model.documento]);
+    final docExiste = await repository.exists("documento = ?", [
+      model.documento,
+    ]);
     if (docExiste) {
       throw Exception("Já existe um cliente cadastrado com este documento.");
     }
@@ -55,15 +60,25 @@ class ClienteValidation extends BaseValidation<ClienteModel, ClienteRepository> 
 
   @override
   Future<void> validateRulesUpdate(ClienteModel model) async {
-    final docExiste = await repository.exists("documento = ? AND id != ?", [model.documento, model.id]);
+    final docExiste = await repository.exists("documento = ? AND id != ?", [
+      model.documento,
+      model.id,
+    ]);
     if (docExiste) {
-      throw Exception("Este documento já está sendo utilizado por outro cliente.");
+      throw Exception(
+        "Este documento já está sendo utilizado por outro cliente.",
+      );
     }
 
     if (model.email != null && model.email!.trim().isNotEmpty) {
-      final emailExiste = await repository.exists("email = ? AND id != ?", [model.email, model.id]);
+      final emailExiste = await repository.exists("email = ? AND id != ?", [
+        model.email,
+        model.id,
+      ]);
       if (emailExiste) {
-        throw Exception("Este e-mail já está sendo utilizado por outro cliente.");
+        throw Exception(
+          "Este e-mail já está sendo utilizado por outro cliente.",
+        );
       }
     }
   }
