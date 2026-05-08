@@ -21,7 +21,7 @@ class FinalizarOrdemServicoPage extends StatefulWidget {
 class _FinalizarOrdemServicoPageState extends State<FinalizarOrdemServicoPage> with LoaderMixin, MessagesMixin {
   final _formKey = GlobalKey<FormState>();
 
-  ServiceOrderModel? _ordemSelecionada;
+  OrdemServicoModel? _ordemSelecionada;
   XFile? _fotoDepois;
   String? _assinaturaBase64;
 
@@ -197,7 +197,7 @@ class _FinalizarOrdemServicoPageState extends State<FinalizarOrdemServicoPage> w
                 ),
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: DropdownButtonHideUnderline(
-                  child: DropdownButton<ServiceOrderModel>(
+                  child: DropdownButton<OrdemServicoModel>(
                     value: _ordemSelecionada,
                     isExpanded: true,
                     hint: const Text('Selecione a OS'),

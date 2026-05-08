@@ -12,7 +12,7 @@ class OSListPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
     final String title = args['title'];
-    final List<ServiceOrderModel> lista = args['lista'];
+    final List<OrdemServicoModel> lista = args['lista'];
 
     final clientes = context.watch<ClienteController>().clientesCadastrados;
 

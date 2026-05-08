@@ -1,17 +1,32 @@
-import 'base_model.dart';
+import '../base/base_model.dart';
 
 class TecnicoModel extends BaseModel {
   String nome;
   String? especialidade;
 
-  TecnicoModel({super.id, super.isSync, required this.nome, this.especialidade});
+  TecnicoModel({
+    super.id,
+    super.createdAt,
+    super.isSync = 0,
+    super.ativo = true,
+    required this.nome,
+    this.especialidade,
+  });
+
+  TecnicoModel.fromMap(super.map)
+      : nome = map['nome'] ?? '',
+        especialidade = map['especialidade'],
+        super.fromMap();
 
   @override
-  Map<String, dynamic> toMap() => {
-    'id': id, 'nome': nome, 'especialidade': especialidade, 'is_sync': isSync ? 1 : 0,
-  };
-
-  factory TecnicoModel.fromMap(Map<String, dynamic> map) => TecnicoModel(
-    id: map['id'] as int?, nome: map['nome'], especialidade: map['especialidade'], isSync: map['is_sync'] == 1,
-  );
+  Map<String, dynamic> toMap() {
+    final map = super.toMap();
+    
+    map.addAll({
+      'nome': nome,
+      'especialidade': especialidade,
+    });
+    
+    return map;
+  }
 }

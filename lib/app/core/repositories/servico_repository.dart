@@ -1,9 +1,10 @@
 import '../models/servico_model.dart';
-import 'base_repository.dart';
+import '../base/base_repository.dart';
 
 class ServicoRepository extends BaseRepository<ServicoModel> {
 
-  ServicoRepository() : super('servicos');
+  @override
+  String get tableName => 'servicos';
 
   @override
   ServicoModel fromMap(Map<String, dynamic> map) {

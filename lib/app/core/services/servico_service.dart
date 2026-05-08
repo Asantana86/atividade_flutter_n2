@@ -1,23 +1,27 @@
+import '../base/base.service.dart';
 import '../models/servico_model.dart';
 import '../repositories/servico_repository.dart';
 import '../validations/servico_validation.dart';
 
-class ServicoService {
-  final _repository = ServicoRepository();
-  final _validation = ServicoValidation();
+class ServicoService extends BaseService<ServicoModel, ServicoRepository, ServicoValidation> {
+  
+  ServicoService(super.validation, super.repository);
 
-  Future<void> salvarServico(ServicoModel servico) async {
-
-    final erroValidacao = _validation.validar(servico);
-    if (erroValidacao != null) {
-      throw Exception(erroValidacao);
-    }
-
-    servico.isSync = false;
-    await _repository.insert(servico);
+  @override
+  ServicoModel cloneModelWithId(ServicoModel model, int id) {
+    return ServicoModel(
+      id: id,
+      createdAt: model.createdAt,
+      isSync: model.isSync,
+      ativo: model.ativo,
+      descricao: model.descricao,
+      preco: model.preco,
+      tempoEstimado: model.tempoEstimado,
+    );
   }
 
-  Future<List<ServicoModel>> buscarTodos() async {
-    return await _repository.getAll();
+  @override
+  void beforeUpdate(ServicoModel model) {
+    model.isSync = 0;
   }
 }

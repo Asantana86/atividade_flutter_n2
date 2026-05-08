@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+
 import '../../../../app/shared/widgets/app_logo.dart';
-import '../../../core/services/user_service.dart';
+import '../../../core/services/auth_service.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -10,6 +11,9 @@ class SplashPage extends StatefulWidget {
 }
 
 class _SplashPageState extends State<SplashPage> {
+
+  final AuthService _authService = AuthService();
+
   @override
   void initState() {
     super.initState();
@@ -17,12 +21,12 @@ class _SplashPageState extends State<SplashPage> {
   }
 
   Future<void> _initializeApp() async {
-    // No futuro, instanciamento do Banco de Dados (SQLite)
-    await Future.delayed(const Duration(seconds: 2));
+
+    await Future.delayed(const Duration(milliseconds: 1500));
 
     if (!mounted) return;
 
-    final isLogged = UserService().isLogged;
+    final isLogged = _authService.usuarioSupabase != null;
 
     if (isLogged) {
       Navigator.pushReplacementNamed(context, '/dashboard');

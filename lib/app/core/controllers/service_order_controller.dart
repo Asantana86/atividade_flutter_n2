@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
-import '../models/service_order_model.dart';
+import '../models/ordem_servico_model.dart';
 import '../services/service_order_service.dart';
 
 class ServiceOrderController extends ChangeNotifier {
-  final _service = ServiceOrderService();
+  final _service = OrdemServicoService();
 
   // ESTADOS DA TELA
   bool isLoading = false;
   String? errorMessage;
   bool isSuccess = false;
   
-  List<ServiceOrderModel> ordensCadastradas = [];
+  List<OrdemServicoModel> ordensCadastradas = [];
 
   // AÇÕES DA TELA
 
@@ -30,7 +30,7 @@ class ServiceOrderController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final novaOS = ServiceOrderModel(
+      final novaOS = OrdemServicoModel(
         clienteId: clienteId,
         tecnicoId: tecnicoId,
         observacao: observacao,
@@ -56,7 +56,7 @@ class ServiceOrderController extends ChangeNotifier {
   }
 
   Future<void> finalizarOrdemServico({
-    required ServiceOrderModel ordem,
+    required OrdemServicoModel ordem,
     String? fotoDepois,
     required String assinatura,
   }) async {

@@ -1,16 +1,31 @@
+import '../base/base.validation.dart';
 import '../models/servico_model.dart';
+import '../repositories/servico_repository.dart';
 
-class ServicoValidation {
+class ServicoValidation extends BaseValidation<ServicoModel, ServicoRepository> {
+  ServicoValidation(super.repository);
 
-  String? validar(ServicoModel servico) {
+  @override
+  void validateFields(ServicoModel? model) {
+    super.validateFields(model);
+    final servico = model!;
+
     if (servico.descricao.trim().isEmpty) {
-      return 'A descrição do serviço é obrigatória.';
-    }
-    
-    if (servico.preco < 0) {
-      return 'O preço do serviço não pode ser negativo.';
+      throw Exception("A descrição do serviço é obrigatória.");
     }
 
-    return null;
+    if (servico.preco < 0) {
+      throw Exception("O preço do serviço não pode ser negativo.");
+    }
+  }
+
+  @override
+  Future<void> validateRulesCreate(ServicoModel model) async {
+    
+  }
+
+  @override
+  Future<void> validateRulesUpdate(ServicoModel model) async {
+    
   }
 }

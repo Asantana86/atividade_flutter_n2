@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../../../shared/widgets/custom_text_field.dart';
 import '../../../shared/widgets/app_logo.dart';
 import '../../../shared/widgets/custom_button.dart';
 import '../../../core/mixins/loader.mixin.dart';
 import '../../../core/mixins/messages.mixin.dart';
-import '../../../core/models/user_model.dart';
-import '../../../core/services/user_service.dart';
+import '../../../core/services/auth_service.dart';
+
+// Imports necessários para chamar sua validação
+import '../../../core/models/usuario_model.dart';
+import '../../../core/validations/usuario_validation.dart';
+import '../../../core/repositories/usuario_repository.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -20,6 +26,8 @@ class _RegisterPageState extends State<RegisterPage> with LoaderMixin, MessagesM
   late TextEditingController senhaController;
   late TextEditingController confirmaSenhaController;
   
+  final AuthService _authService = AuthService();
+
   double _passwordStrength = 0;
   bool _senhasCorrespondem = false;
 
@@ -78,44 +86,53 @@ class _RegisterPageState extends State<RegisterPage> with LoaderMixin, MessagesM
     super.dispose();
   }
 
-  void _handleRegister() async {
+  Future<void> _handleRegister() async {
     final nome = nomeController.text.trim();
     final email = emailController.text.trim();
     final senha = senhaController.text;
 
-    if (nome.isEmpty) {
-      showError(context, "Por favor, preencha o nome.");
-      return;
-    }
-    
-    if (!email.contains('@')) {
-      showError(context, 'E-mail inválido. Deve conter "@".');
-      return;
-    }
-    if (senha.length <= 6) {
-      showError(context, 'A senha deve ter mais de 6 caracteres.');
-      return;
-    }
     if (!_senhasCorrespondem) {
       showError(context, "As senhas não correspondem.");
       return;
     }
 
     showLoading(context);
-    await Future.delayed(const Duration(seconds: 1));
-    
-    if (mounted) {
-      final novoUsuario = UserModel(
+
+    try {
+      final usuarioTemporario = UsuarioModel(
         nome: nome,
         email: email,
         senha: senha,
+        ativo: true,
+      );
+
+      final validation = UsuarioValidation(UsuarioRepository());
+      
+      validation.validateFields(usuarioTemporario); 
+
+      await validation.validateRulesCreate(usuarioTemporario); 
+
+      await _authService.cadastrar(
+        email: email, 
+        senha: senha, 
+        nomeCompleto: nome,
       );
       
-      UserService().setUsuario(novoUsuario);
-      
-      hideLoading(context);
-      showSuccess(context, "Cadastro realizado com sucesso!");
-      Navigator.pop(context);
+      if (mounted) {
+        hideLoading(context);
+        showSuccess(context, "Cadastro realizado! Faça login para continuar.");
+        Navigator.pop(context); 
+      }
+    } on AuthException catch (e) {
+      if (mounted) {
+        hideLoading(context);
+        showError(context, 'Falha no cadastro: ${e.message}');
+      }
+    } catch (e) {
+      if (mounted) {
+        hideLoading(context);
+        showError(context, e.toString().replaceAll('Exception: ', ''));
+      }
     }
   }
 
@@ -212,13 +229,12 @@ class _RegisterPageState extends State<RegisterPage> with LoaderMixin, MessagesM
                     ),
                   const SizedBox(height: 16),
 
+                  // Removidos os parâmetros textInputAction e onFieldSubmitted
                   CustomTextField(
                     label: "Confirmar Senha",
                     isPassword: true,
                     controller: confirmaSenhaController,
                     prefixIcon: Icons.lock_outline,
-                    textInputAction: TextInputAction.done,
-                    onFieldSubmitted: _handleRegister,
                   ),
 
                   if (confirmaSenhaController.text.isNotEmpty)

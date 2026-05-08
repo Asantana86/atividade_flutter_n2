@@ -1,17 +1,17 @@
-import '../models/user_model.dart';
+import '../models/usuario_model.dart';
 
 class UserService {
   static final UserService _instance = UserService._internal();
   factory UserService() => _instance;
   UserService._internal();
 
-  UserModel? _usuarioLogado;
+  UsuarioModel? _usuarioLogado;
 
-  UserModel? get usuario => _usuarioLogado;
+  UsuarioModel? get usuario => _usuarioLogado;
   
   bool get isLogged => _usuarioLogado != null;
 
-  void setUsuario(UserModel usuario) {
+  void setUsuario(UsuarioModel usuario) {
     _usuarioLogado = usuario;
   }
 

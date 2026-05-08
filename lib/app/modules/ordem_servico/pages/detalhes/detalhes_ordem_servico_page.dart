@@ -9,7 +9,7 @@ import '../../../../core/controllers/cliente_controller.dart';
 import '../../../../core/controllers/tecnico_controller.dart';
 
 class DetalhesOrdemServicoPage extends StatelessWidget {
-  final ServiceOrderModel ordem;
+  final OrdemServicoModel ordem;
 
   const DetalhesOrdemServicoPage({super.key, required this.ordem});
 

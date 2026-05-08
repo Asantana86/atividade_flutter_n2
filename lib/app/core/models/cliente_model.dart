@@ -1,40 +1,40 @@
-import 'base_model.dart';
+import '../base/base_model.dart';
 
 class ClienteModel extends BaseModel {
   String nome;
-  String? documento;
-  String? telefone;
+  String documento;
+  String telefone;
   String? email;
 
   ClienteModel({
     super.id,
-    super.isSync,
+    super.createdAt,
+    super.isSync = 0,
+    super.ativo = true,
     required this.nome,
-    this.documento,
-    this.telefone,
+    required this.documento,
+    required this.telefone,
     this.email,
   });
 
+  ClienteModel.fromMap(super.map)
+      : nome = map['nome'] ?? '',
+        documento = map['documento'] ?? '',
+        telefone = map['telefone'] ?? '',
+        email = map['email'],
+        super.fromMap();
+
   @override
   Map<String, dynamic> toMap() {
-    return {
-      'id': id,
+    final map = super.toMap();
+    
+    map.addAll({
       'nome': nome,
       'documento': documento,
       'telefone': telefone,
-      'email': email,
-      'is_sync': isSync ? 1 : 0, 
-    };
-  }
-
-  factory ClienteModel.fromMap(Map<String, dynamic> map) {
-    return ClienteModel(
-      id: map['id'] as int?,
-      nome: map['nome'] as String,
-      documento: map['documento'] as String?,
-      telefone: map['telefone'] as String?,
-      email: map['email'] as String?,
-      isSync: map['is_sync'] == 1 || map['is_sync'] == true,
-    );
+      'email': email, 
+    });
+    
+    return map;
   }
 }

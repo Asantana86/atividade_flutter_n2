@@ -1,24 +1,26 @@
+import '../base/base.service.dart';
 import '../models/tecnico_model.dart';
 import '../repositories/tecnico_repository.dart';
 import '../validations/tecnico_validation.dart';
 
-class TecnicoService {
-  final _repository = TecnicoRepository();
-  final _validation = TecnicoValidation();
+class TecnicoService extends BaseService<TecnicoModel, TecnicoRepository, TecnicoValidation> {
+  
+  TecnicoService(super.validation, super.repository);
 
-  Future<void> salvarTecnico(TecnicoModel tecnico) async {
-
-    final erroValidacao = _validation.validar(tecnico);
-    if (erroValidacao != null) {
-      throw Exception(erroValidacao);
-    }
-
-    tecnico.isSync = false;
-    
-    await _repository.insert(tecnico);
+  @override
+  TecnicoModel cloneModelWithId(TecnicoModel model, int id) {
+    return TecnicoModel(
+      id: id,
+      createdAt: model.createdAt,
+      isSync: model.isSync,
+      ativo: model.ativo,
+      nome: model.nome,
+      especialidade: model.especialidade,
+    );
   }
 
-  Future<List<TecnicoModel>> buscarTodos() async {
-    return await _repository.getAll();
+  @override
+  void beforeUpdate(TecnicoModel model) {
+    model.isSync = 0;
   }
 }

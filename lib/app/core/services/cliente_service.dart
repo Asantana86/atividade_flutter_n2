@@ -1,24 +1,28 @@
+import '../base/base.service.dart';
 import '../models/cliente_model.dart';
 import '../repositories/cliente_repository.dart';
 import '../validations/cliente_validation.dart';
 
-class ClienteService {
-  final _repository = ClienteRepository();
-  final _validation = ClienteValidation();
+class ClienteService extends BaseService<ClienteModel, ClienteRepository, ClienteValidation> {
+  
+  ClienteService(super.validation, super.repository);
 
-  Future<void> salvar(ClienteModel cliente) async {
-
-    final erroValidacao = await _validation.validar(cliente);
-    
-    if (erroValidacao != null) {
-      throw Exception(erroValidacao);
-    }
-
-    cliente.isSync = false;
-    await _repository.insert(cliente);
+  @override
+  ClienteModel cloneModelWithId(ClienteModel model, int id) {
+    return ClienteModel(
+      id: id,
+      createdAt: model.createdAt,
+      isSync: model.isSync,
+      ativo: model.ativo,
+      nome: model.nome,
+      documento: model.documento,
+      telefone: model.telefone,
+      email: model.email,
+    );
   }
 
-  Future<List<ClienteModel>> buscarTodos() async {
-    return await _repository.getAll();
+  @override
+  void beforeUpdate(ClienteModel model) {
+    model.isSync = 0;
   }
 }

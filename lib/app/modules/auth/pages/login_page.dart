@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../../../shared/widgets/custom_text_field.dart';
 import '../../../shared/widgets/app_logo.dart';
 import '../../../shared/widgets/custom_button.dart';
 import '../../../core/mixins/loader.mixin.dart';
 import '../../../core/mixins/messages.mixin.dart';
-import '../../../core/models/user_model.dart';
-import '../../../core/services/user_service.dart';
+import '../../../core/services/auth_service.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -17,6 +18,8 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> with LoaderMixin, MessagesMixin {
   late TextEditingController emailController;
   late TextEditingController senhaController;
+  
+  final AuthService _authService = AuthService();
 
   @override
   void initState() {
@@ -32,39 +35,38 @@ class _LoginPageState extends State<LoginPage> with LoaderMixin, MessagesMixin {
     super.dispose();
   }
 
-  void _handleLogin() async {
+  Future<void> _handleLogin() async {
     final email = emailController.text.trim();
     final senha = senhaController.text;
 
-    if (!email.contains('@')) {
-      showError(context, 'E-mail inválido. Deve conter "@".');
-      return;
-    }
-    if (senha.length <= 6) {
-      showError(context, 'A senha deve ter mais de 6 caracteres.');
-      return;
-    }
-
-    final UserModel? usuario = UserService().usuario;
-    if (usuario == null) {
-      showError(context, 'Nenhum usuário cadastrado. Faça o registro primeiro.');
-      return;
-    }
-
-    final bool credenciaisValidas = usuario.email == email && usuario.senha == senha;
-
-    if (!credenciaisValidas) {
-      showError(context, 'E-mail ou senha inválidos.');
+    // Validação básica de tela
+    if (email.isEmpty || senha.isEmpty) {
+      showError(context, 'Preencha e-mail e senha.');
       return;
     }
 
     showLoading(context);
-    await Future.delayed(const Duration(seconds: 1));
-    
-    if (mounted) {
-      hideLoading(context);
-      showSuccess(context, 'Login realizado com sucesso!');
-      Navigator.pushReplacementNamed(context, '/dashboard'); 
+
+    try {
+      // Faz o login direto no Supabase. 
+      // Se a senha estiver errada ou e-mail não existir, ele cai no AuthException.
+      await _authService.login(email, senha);
+      
+      if (mounted) {
+        hideLoading(context);
+        showSuccess(context, 'Login realizado com sucesso!');
+        Navigator.pushReplacementNamed(context, '/dashboard'); 
+      }
+    } on AuthException {
+      if (mounted) {
+        hideLoading(context);
+        showError(context, 'Credenciais inválidas ou usuário não encontrado.');
+      }
+    } catch (e) {
+      if (mounted) {
+        hideLoading(context);
+        showError(context, 'Erro inesperado: $e');
+      }
     }
   }
 
@@ -112,13 +114,12 @@ class _LoginPageState extends State<LoginPage> with LoaderMixin, MessagesMixin {
                   ),
                   const SizedBox(height: 24),
 
+                  // Removidos os parâmetros textInputAction e onFieldSubmitted
                   CustomTextField(
                     label: "Senha",
                     isPassword: true,
                     controller: senhaController,
                     prefixIcon: Icons.lock_outline,
-                    textInputAction: TextInputAction.done,
-                    onFieldSubmitted: _handleLogin,
                   ),
                   const SizedBox(height: 8),
                   
@@ -126,7 +127,7 @@ class _LoginPageState extends State<LoginPage> with LoaderMixin, MessagesMixin {
                     alignment: Alignment.centerRight,
                     child: TextButton(
                       onPressed: () {
-                        
+                        showInfo(context, 'Recuperação de senha em breve.');
                       },
                       child: Text(
                         "Esqueceu a senha?",

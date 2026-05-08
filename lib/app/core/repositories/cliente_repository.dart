@@ -1,9 +1,10 @@
 import '../models/cliente_model.dart';
-import 'base_repository.dart';
+import '../base/base_repository.dart';
 
 class ClienteRepository extends BaseRepository<ClienteModel> {
 
-  ClienteRepository() : super('clientes');
+  @override
+  String get tableName => 'clientes';
 
   @override
   ClienteModel fromMap(Map<String, dynamic> map) {
