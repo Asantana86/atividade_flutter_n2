@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
-// Importe o serviço de Auth
+import '../../../core/helpers/sync_system_initializer.dart';
+
 import '../../../core/services/auth_service.dart';
 import '../../../core/models/ordem_servico_model.dart';
 
-// Importe as dependências (Ajuste os caminhos conforme suas pastas)
 import '../../../core/repositories/cliente_repository.dart';
 import '../../../core/validations/cliente_validation.dart';
 import '../../../core/services/cliente_service.dart';
@@ -21,10 +21,14 @@ import '../../../core/repositories/ordem_servico_repository.dart';
 import '../../../core/validations/ordem_servico_validation.dart';
 import '../../../core/services/ordem_servico_service.dart';
 
-// Importe os Controllers e a ListView que construímos
-import '../../../core/controllers/ordem_servico_dashboard_controller.dart';
+import '../../../core/controllers/ordem_servico_list_controller.dart';
+import '../../ordem_servico/pages/ordem_servico_list_view.dart';
+
 import '../../../core/controllers/ordem_servico_iniciar_form_controller.dart';
-import '../../../core/controllers/ordem_servico_list_view.dart';
+import '../../ordem_servico/pages/ordem_servico_iniciar_form_page.dart';
+
+import '../../../core/controllers/ordem_servico_finalizar_form_controller.dart';
+import '../../ordem_servico/pages/ordem_servico_finalizar_form_page.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -45,8 +49,7 @@ class _DashboardPageState extends State<DashboardPage> {
   late final ServicoService servicoService;
   late final OrdemServicoService osService;
 
-  // O Controller que vai gerenciar a ListView
-  late final OrdemServicoDashboardController osController;
+  late final OrdemServicoListController osController;
 
   @override
   void initState() {
@@ -85,7 +88,7 @@ class _DashboardPageState extends State<DashboardPage> {
     );
 
     // 2. Criando o controller principal passando as "ferramentas" para ele
-    osController = OrdemServicoDashboardController(
+    osController = OrdemServicoListController(
       osService,
       clienteService: clienteService,
       tecnicoService: tecnicoService,
@@ -145,20 +148,110 @@ class _DashboardPageState extends State<DashboardPage> {
                   child: Icon(Icons.person, size: 40, color: Colors.grey),
                 ),
               ),
+              const Divider(),
               ListTile(
                 leading: const Icon(Icons.dashboard),
                 title: const Text('Dashboard'),
                 onTap: () => Navigator.pop(context),
               ),
+              const Divider(),
               ListTile(
-                leading: const Icon(Icons.people), // Ícone de grupo
+                leading: const Icon(Icons.miscellaneous_services),
+                title: const Text('Serviços'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.pushNamed(context, '/servicos');
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.engineering),
+                title: const Text('Técnicos'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.pushNamed(context, '/tecnicos');
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.people),
                 title: const Text('Clientes'),
                 onTap: () {
-                  Navigator.pop(context); // Fecha o menu lateral
+                  Navigator.pop(context);
                   Navigator.pushNamed(
                     context,
                     '/clientes',
-                  ); // Vai para a Lista!
+                  );
+                },
+              ),
+              const Divider(),
+              ListTile(
+                leading: const Icon(Icons.play_circle_outline, color: Colors.blue),
+                title: const Text('Iniciar Nova OS'),
+                onTap: () async {
+                  Navigator.pop(context);
+                  
+                  final recarregar = await Navigator.push<bool>(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => OrdemServicoIniciarFormPage(
+                        controller: OrdemServicoIniciarFormController(
+                          osService,
+                          clienteService: clienteService,
+                          tecnicoService: tecnicoService,
+                          servicoService: servicoService,
+                        ),
+                      ),
+                    ),
+                  );
+
+                  if (recarregar == true) {
+                    osController.carregarOrdens();
+                  }
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.check_circle_outline, color: Colors.green),
+                title: const Text('Finalizar OS'),
+                onTap: () async {
+                  Navigator.pop(context);
+                  
+                  final recarregar = await Navigator.push<bool>(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => OrdemServicoFinalizarFormPage(
+                        controller: OrdemServicoFinalizarFormController(
+                          osService,
+                          clienteService: clienteService,
+                        ),
+                      ),
+                    ),
+                  );
+
+                  if (recarregar == true) {
+                    osController.carregarOrdens();
+                  }
+                },
+              ),
+              const Divider(),
+              ListTile(
+                leading: const Icon(Icons.sync, color: Colors.blue),
+                title: const Text('Forçar Sincronização'),
+                onTap: () async {
+                  Navigator.pop(context);
+                  
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Sincronizando com a nuvem...'))
+                  );
+                  
+                  await SyncSystemInitializer.forceSyncAll();
+                  
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Sincronização finalizada!'), 
+                        backgroundColor: Colors.green,
+                      )
+                    );
+                  }
                 },
               ),
               const Divider(),
@@ -194,19 +287,26 @@ class _DashboardPageState extends State<DashboardPage> {
         ),
 
         floatingActionButton: FloatingActionButton.extended(
-          onPressed: () {
-            // Navegamos direto para o Controller de Iniciar passando as instâncias
-            Navigator.push(
+          onPressed: () async {
+            // Aguarda o resultado para saber se precisa recarregar a lista
+            final recarregar = await Navigator.push<bool>(
               context,
               MaterialPageRoute(
-                builder: (_) => OrdemServicoIniciarFormController(
-                  osService,
-                  clienteService: clienteService,
-                  tecnicoService: tecnicoService,
-                  servicoService: servicoService,
+                builder: (_) => OrdemServicoIniciarFormPage(
+                  controller: OrdemServicoIniciarFormController(
+                    osService,
+                    clienteService: clienteService,
+                    tecnicoService: tecnicoService,
+                    servicoService: servicoService,
+                  ),
                 ),
               ),
             );
+
+            // Se voltar "true" (salvou com sucesso)
+            if (recarregar == true) {
+              osController.carregarOrdens();
+            }
           },
           label: const Text('Nova Ordem'),
           icon: const Icon(Icons.add),

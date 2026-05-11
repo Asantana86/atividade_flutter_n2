@@ -1,23 +1,27 @@
 import 'package:dio/dio.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../helpers/app.config.dart';
-
-/// Interceptor para tratamento de autenticação e headers
 class AuthInterceptor extends Interceptor {
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
-    // Adicionar headers padrão
+
     options.headers['Content-Type'] = 'application/json';
     options.headers['Accept'] = 'application/json';
 
-    // Adicionar token de autenticação do Supabase
-    final token = AppConfig.supabaseKey;
-    if (token.isNotEmpty) {
-      options.headers['apikey'] = token;
-      options.headers['Authorization'] = 'Bearer $token';
+    final anonKey = AppConfig.supabaseKey;
+    if (anonKey.isNotEmpty) {
+      options.headers['apikey'] = anonKey;
     }
 
-    // Adicionar User-Agent customizado
+    final session = Supabase.instance.client.auth.currentSession;
+
+    if (session != null) {
+      options.headers['Authorization'] = 'Bearer ${session.accessToken}';
+    } else if (anonKey.isNotEmpty) {
+      options.headers['Authorization'] = 'Bearer $anonKey';
+    }
+
     options.headers['User-Agent'] = 'ServiceFlow/1.0';
 
     print('🌐 ${options.method} ${options.path}');

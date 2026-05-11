@@ -9,6 +9,7 @@ class CustomTextField extends StatelessWidget {
   final String? Function(String?)? validator;
   final int maxLines;
   final bool readOnly;
+  final TextInputAction? textInputAction;
 
   const CustomTextField({
     super.key,
@@ -21,6 +22,7 @@ class CustomTextField extends StatelessWidget {
     this.validator,
     this.maxLines = 1,
     this.readOnly = false,
+    this.textInputAction,
   });
 
   @override
@@ -31,6 +33,7 @@ class CustomTextField extends StatelessWidget {
       controller: controller,
       obscureText: isPassword,
       keyboardType: keyboardType,
+      textInputAction: textInputAction,
       validator: validator,
       readOnly: readOnly,
       maxLines: isPassword ? 1 : maxLines,

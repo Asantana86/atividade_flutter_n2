@@ -1,176 +1,154 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 
-import '../mixins/loader.mixin.dart';
-import '../mixins/messages.mixin.dart';
 import 'base_service.dart';
 import 'base_validation.dart';
 import 'base_model.dart';
 import 'base_repository.dart';
 
-/// BaseController abstrato que fornece estrutura padronizada para controllers
-///
-/// Automaticamente inclui LoaderMixin e MessagesMixin para todas as subclasses
-/// Subclasses podem chamar diretamente: showLoading(), showSuccess(), withLoading(), etc.
+/// INTERFACE PURA PARA A UI
+abstract class IBaseController {
+  ValueNotifier<bool> get isLoading;
+  
+  void dispose();
+  
+  Future<T?> executeOperation<T>(
+    Future<T> operation, {
+    void Function(String)? onSuccess,
+    void Function(String)? onError,
+    String? successMessage,
+  });
+
+  Future<List<T>> executeListOperation<T>(
+    Future<List<T>> operation, {
+    void Function(String)? onError,
+    String? customErrorMessage,
+  });
+
+  Future<bool> executeCrudOperation(
+    Future<void> operation, {
+    void Function(String)? onSuccess,
+    void Function(String)? onError,
+    String? successMessage,
+  });
+}
 abstract class BaseController<
   E extends BaseModel,
   R extends BaseRepository<E>,
   V extends BaseValidation<E, R>,
   S extends BaseService<E, R, V>
->
-    extends StatelessWidget
-    with LoaderMixin, MessagesMixin {
+> implements IBaseController {
   final S service;
   final E? model;
+  
+  // Estado universal de carregamento que pode ser escutado pela Page
+  @override
+  final ValueNotifier<bool> isLoading = ValueNotifier(false);
 
   BaseController(this.service, {this.model});
 
-  /// Método abstrato que deve ser implementado pelas subclasses
-  /// Subclasses têm acesso direto aos mixins através da herança
-  Widget buildPage(BuildContext context, S service);
-
+  /// Fecha/limpa os recursos do Controller quando a Page é destruída
   @override
-  Widget build(BuildContext context) {
-    return buildPage(context, service);
+  @mustCallSuper
+  void dispose() {
+    isLoading.dispose();
   }
 
-  /// Executa operação com loading automático e tratamento completo de exceções
-  /// - Mostra loading automaticamente
-  /// - Remove loading em caso de sucesso ou erro
-  /// - Mostra mensagem de sucesso se especificada
-  /// - Mostra mensagem de erro automaticamente para qualquer exceção
+  /// Executa uma operação genérica gerenciando o estado de loading e erros.
+  /// Retorna o resultado da operação ou null em caso de falha.
+  @override
   Future<T?> executeOperation<T>(
-    BuildContext context,
     Future<T> operation, {
-    String? loadingMessage,
+    void Function(String)? onSuccess,
+    void Function(String)? onError,
     String? successMessage,
-    bool showSuccessMessage = false,
   }) async {
     try {
-      showLoading(context, message: loadingMessage ?? 'Processando...');
+      isLoading.value = true;
       final result = await operation;
 
-      // Remove loading em caso de sucesso
-      hideLoading(context);
-
-      // Mostra mensagem de sucesso se solicitado
-      if (showSuccessMessage && successMessage != null) {
-        showSuccess(context, successMessage);
+      if (successMessage != null && onSuccess != null) {
+        onSuccess(successMessage);
       }
-
       return result;
     } catch (e) {
-      // Remove loading em caso de erro
-      hideLoading(context);
-
-      // Converte todas as exceções para mensagem de erro
-      _handleException(context, e);
-
+      _handleException(e, onError);
       return null;
+    } finally {
+      isLoading.value = false;
     }
   }
 
-  /// Executa operação de listagem com tratamento completo
+  /// Executa operação de listagem, retornando lista vazia em caso de falha.
+  @override
   Future<List<T>> executeListOperation<T>(
-    BuildContext context,
     Future<List<T>> operation, {
-    String? loadingMessage,
-    String? errorMessage,
+    void Function(String)? onError,
+    String? customErrorMessage,
   }) async {
     try {
-      showLoading(context, message: loadingMessage ?? 'Carregando...');
-      final result = await operation;
-
-      hideLoading(context);
-      return result;
+      isLoading.value = true;
+      return await operation;
     } catch (e) {
-      hideLoading(context);
-      _handleException(context, e, customMessage: errorMessage);
+      _handleException(e, onError, customMessage: customErrorMessage);
       return [];
+    } finally {
+      isLoading.value = false;
     }
   }
 
-  /// Executa operação CRUD com confirmação prévia e feedback completo
+  /// Executa operação CRUD (Create, Update, Delete) gerenciando o loading
+  /// e retornando um booleano de sucesso. (A confirmação (Dialog) fica na Page).
+  @override
   Future<bool> executeCrudOperation(
-    BuildContext context,
     Future<void> operation, {
-    String? confirmTitle,
-    String? confirmMessage,
-    String? loadingMessage,
+    void Function(String)? onSuccess,
+    void Function(String)? onError,
     String? successMessage,
-    bool requiresConfirmation = false,
   }) async {
-    // Se requer confirmação, mostra dialog primeiro
-    if (requiresConfirmation) {
-      final confirmed = await showConfirmation(
-        context,
-        confirmTitle ?? 'Confirmar Operação',
-        confirmMessage ?? 'Tem certeza que deseja continuar?',
-      );
-
-      if (confirmed != true) return false;
-    }
-
     try {
-      showLoading(context, message: loadingMessage ?? 'Processando...');
+      isLoading.value = true;
       await operation;
 
-      hideLoading(context);
-
-      if (successMessage != null) {
-        showSuccess(context, successMessage);
+      if (successMessage != null && onSuccess != null) {
+        onSuccess(successMessage);
       }
-
       return true;
     } catch (e) {
-      hideLoading(context);
-      _handleException(context, e);
+      _handleException(e, onError);
       return false;
+    } finally {
+      isLoading.value = false;
     }
   }
 
-  /// Tratamento centralizado de todas as exceções
-  /// Converte exceções de Repository, Validation, Service e bibliotecas em mensagens de erro
+  /// Tratamento centralizado de exceções que devolve a mensagem formatada
+  /// para o callback [onError], que será responsável por mostrá-la na UI.
   void _handleException(
-    BuildContext context,
-    dynamic exception, {
+    dynamic exception, 
+    void Function(String)? onError, {
     String? customMessage,
   }) {
+    if (onError == null) return; // Se a tela não pediu pra ser avisada, não faz nada
+
     String errorMessage;
-    String? errorDetails;
 
     if (exception is FormatException) {
-      errorMessage = 'Erro de formato de dados';
-      errorDetails = exception.message;
+      errorMessage = 'Erro de formato de dados: ${exception.message}';
     } else if (exception is ArgumentError) {
-      errorMessage = 'Parâmetro inválido';
-      errorDetails = exception.message.toString();
+      errorMessage = 'Parâmetro inválido: ${exception.message}';
     } else if (exception is StateError) {
-      errorMessage = 'Erro de estado da aplicação';
-      errorDetails = exception.message;
-    } else if (exception is TypeError) {
-      errorMessage = 'Erro de tipo de dados';
-      errorDetails = exception.toString();
-    } else if (exception.toString().contains('SQL') ||
-        exception.toString().contains('database') ||
-        exception.toString().contains('sqlite')) {
-      errorMessage = 'Erro no banco de dados';
-      errorDetails = exception.toString();
-    } else if (exception.toString().contains('HTTP') ||
-        exception.toString().contains('Connection') ||
-        exception.toString().contains('network')) {
-      errorMessage = 'Erro de conexão com servidor';
-      errorDetails = exception.toString();
-    } else if (exception.toString().contains('validation') ||
-        exception.toString().contains('Validation')) {
-      errorMessage = 'Erro de validação';
-      errorDetails = exception.toString();
+      errorMessage = 'Erro de estado da aplicação: ${exception.message}';
+    } else if (exception.toString().contains('SQL') || exception.toString().contains('sqlite')) {
+      errorMessage = 'Erro no banco de dados local. Tente novamente.';
+    } else if (exception.toString().contains('HTTP') || exception.toString().contains('network')) {
+      errorMessage = 'Erro de conexão com o servidor.';
+    } else if (exception.toString().contains('Exception:')) {
+      // Limpa o prefixo "Exception: " gerado pelas nossas validações
+      errorMessage = exception.toString().replaceAll('Exception: ', '');
     } else {
-      // Exceção genérica - usa mensagem personalizada se fornecida
-      errorMessage = customMessage ?? 'Ocorreu um erro inesperado';
-      errorDetails = exception.toString();
+      errorMessage = customMessage ?? 'Ocorreu um erro inesperado: $exception';
     }
 
-    // Mostra mensagem de erro que permanece até usuário fechar
-    showError(context, errorMessage, details: errorDetails);
+    onError(errorMessage);
   }
 }

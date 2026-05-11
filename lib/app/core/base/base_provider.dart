@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:dio/dio.dart';
 
 import '../http/app_client.dart';
 import '../logging/log_service.dart';
@@ -27,18 +28,20 @@ abstract class BaseProvider<E extends BaseModel> {
   /// Converte dados da API externa para entidade local
   E fromExternalFormat(Map<String, dynamic> data);
 
-  /// Sincroniza uma entidade local para a API externa
+  /// Sincroniza uma entidade local para a API externa usando UPSERT
   Future<bool> syncToCloud(E entity) async {
     try {
       final data = toExternalFormat(entity);
 
-      if (entity.id == null) {
-        // CREATE na API externa
-        await _client.post(endpoint, data: data);
-      } else {
-        // UPDATE na API externa
-        await _client.put('$endpoint/${entity.id}', data: data);
-      }
+      // O Header "Prefer: resolution=merge-duplicates" avisa ao Supabase para 
+      // inserir um novo registro ou atualizar o existente caso o ID já esteja lá.
+      await _client.post(
+        endpoint,
+        data: data,
+        options: Options(
+          headers: {'Prefer': 'resolution=merge-duplicates'},
+        ),
+      );
 
       return true;
     } catch (e) {

@@ -24,7 +24,7 @@ class AppClient {
       connectTimeout: const Duration(seconds: 30),
       receiveTimeout: const Duration(seconds: 30),
       sendTimeout: const Duration(seconds: 30),
-      validateStatus: (status) => status != null && status < 500,
+      validateStatus: (status) => status != null && status >= 200 && status < 300,
     );
   }
 
