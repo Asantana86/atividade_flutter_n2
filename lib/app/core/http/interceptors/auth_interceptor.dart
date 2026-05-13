@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 import 'package:dio/dio.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -24,19 +26,19 @@ class AuthInterceptor extends Interceptor {
 
     options.headers['User-Agent'] = 'ServiceFlow/1.0';
 
-    print('🌐 ${options.method} ${options.path}');
+    debugPrint('🌐 ${options.method} ${options.path}');
     super.onRequest(options, handler);
   }
 
   @override
   void onResponse(Response response, ResponseInterceptorHandler handler) {
-    print('✅ ${response.statusCode} ${response.requestOptions.path}');
+    debugPrint('✅ ${response.statusCode} ${response.requestOptions.path}');
     super.onResponse(response, handler);
   }
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
-    print(
+    debugPrint(
         '❌ ${err.response?.statusCode} ${err.requestOptions.path}: ${err.message}');
     super.onError(err, handler);
   }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 class CustomTextField extends StatelessWidget {
   final String label;
   final String? hint;
@@ -9,6 +10,7 @@ class CustomTextField extends StatelessWidget {
   final String? Function(String?)? validator;
   final int maxLines;
   final bool readOnly;
+  final bool enabled;
   final TextInputAction? textInputAction;
 
   const CustomTextField({
@@ -22,6 +24,7 @@ class CustomTextField extends StatelessWidget {
     this.validator,
     this.maxLines = 1,
     this.readOnly = false,
+    this.enabled = true,
     this.textInputAction,
   });
 
@@ -36,13 +39,14 @@ class CustomTextField extends StatelessWidget {
       textInputAction: textInputAction,
       validator: validator,
       readOnly: readOnly,
+      enabled: enabled,
       maxLines: isPassword ? 1 : maxLines,
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
         prefixIcon: prefixIcon != null ? Icon(prefixIcon, color: colorScheme.primary) : null,
         filled: true,
-        fillColor: readOnly 
+        fillColor: (readOnly || !enabled) 
             ? colorScheme.surfaceContainerHighest.withAlpha(51) 
             : colorScheme.surface,
         border: OutlineInputBorder(
@@ -56,6 +60,10 @@ class CustomTextField extends StatelessWidget {
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: colorScheme.primary, width: 2),
+        ),
+        disabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: colorScheme.outlineVariant.withAlpha(100)),
         ),
       ),
     );

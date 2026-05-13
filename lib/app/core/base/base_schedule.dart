@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'dart:async';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -191,8 +192,8 @@ abstract class BaseSchedule<E extends BaseModel, R extends BaseRepository<E>,
     );
 
     // Estado inicial
-    Connectivity().checkConnectivity().then((result) {
-      _isOnline = result != ConnectivityResult.none;
+    Connectivity().checkConnectivity().then((List<ConnectivityResult> results) {
+      _isOnline = results.any((result) => result != ConnectivityResult.none);
     });
   }
 
@@ -213,12 +214,12 @@ abstract class BaseSchedule<E extends BaseModel, R extends BaseRepository<E>,
 
   /// Logging helpers
   void _logInfo(String message) {
-    print(
+    debugPrint(
         '[${DateTime.now()}] [${featureName.toUpperCase()}_SCHEDULE] INFO: $message');
   }
 
   void _logError(String message, dynamic error) {
-    print(
+    debugPrint(
         '[${DateTime.now()}] [${featureName.toUpperCase()}_SCHEDULE] ERROR: $message - $error');
   }
 

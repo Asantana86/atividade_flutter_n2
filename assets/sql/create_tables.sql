@@ -1,12 +1,11 @@
 -- Tabela de Usuários
 CREATE TABLE usuarios (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id TEXT PRIMARY KEY,
     created_at TEXT,
     is_sync INTEGER DEFAULT 0,
     ativo INTEGER DEFAULT 1,
     nome TEXT NOT NULL,
-    email TEXT NOT NULL UNIQUE,
-    senha TEXT NOT NULL
+    email TEXT NOT NULL UNIQUE
 );
 
 -- Tabela de Clientes

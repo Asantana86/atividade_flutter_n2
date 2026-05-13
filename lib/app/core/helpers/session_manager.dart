@@ -1,9 +1,10 @@
 import '../models/usuario_model.dart';
 
-class UserService {
-  static final UserService _instance = UserService._internal();
-  factory UserService() => _instance;
-  UserService._internal();
+/// Singleton para guardar os dados do usuário atualmente logado em memória
+class SessionManager {
+  static final SessionManager _instance = SessionManager._internal();
+  factory SessionManager() => _instance;
+  SessionManager._internal();
 
   UsuarioModel? _usuarioLogado;
 

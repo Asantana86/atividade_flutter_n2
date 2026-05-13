@@ -60,7 +60,7 @@ abstract class BaseRepository<E extends BaseModel> {
     return result.map((map) => fromMap(map)).toList();
   }
 
-  Future<E?> findById(int id) async {
+  Future<E?> findById(dynamic id) async {
     final db = await _dbHelper.database;
     final result = await db.query(tableName, where: 'id = ?', whereArgs: [id]);
 
@@ -82,7 +82,7 @@ abstract class BaseRepository<E extends BaseModel> {
     return result.map((map) => fromMap(map)).toList();
   }
 
-  Future<void> markAsSynced(int id) async {
+  Future<void> markAsSynced(dynamic id) async {
     final db = await _dbHelper.database;
     await db.update(
       tableName,
@@ -102,12 +102,12 @@ abstract class BaseRepository<E extends BaseModel> {
     return result.map((map) => fromMap(map)).toList();
   }
 
-  Future<int> delete(int id) async {
+  Future<int> delete(dynamic id) async {
     final db = await _dbHelper.database;
     return await db.delete(tableName, where: 'id = ?', whereArgs: [id]);
   }
 
-  Future<int> softDelete(int id) async {
+  Future<int> softDelete(dynamic id) async {
     final db = await _dbHelper.database;
     return await db.update(
       tableName,

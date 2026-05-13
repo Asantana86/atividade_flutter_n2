@@ -2,8 +2,7 @@ import '../base/base_validation.dart';
 import '../models/usuario_model.dart';
 import '../repositories/usuario_repository.dart';
 
-class UsuarioValidation
-    extends BaseValidation<UsuarioModel, UsuarioRepository> {
+class UsuarioValidation extends BaseValidation<UsuarioModel, UsuarioRepository> {
   UsuarioValidation(super.repository);
 
   @override
@@ -27,21 +26,22 @@ class UsuarioValidation
       throw Exception("Informe um e-mail válido.");
     }
 
-    if (usuario.senha.trim().isEmpty) {
-      throw Exception("A senha é obrigatória.");
-    }
-    if (usuario.senha.length <= 7) {
-      throw Exception("A senha não pode ser menor ou igual a 7 caracteres.");
-    }
-    if (!RegExp(r'[A-Z]').hasMatch(usuario.senha)) {
-      throw Exception("A senha deve conter ao menos uma letra maiúscula.");
-    }
-    if (!RegExp(r'[0-9]').hasMatch(usuario.senha)) {
-      throw Exception("A senha deve conter ao menos um número.");
-    }
-
-    if (!RegExp(r'[!@#\$&*~_.,;^%]').hasMatch(usuario.senha)) {
-      throw Exception("A senha deve conter ao menos um caractere especial.");
+    if (usuario.id == null || (usuario.senha != null && usuario.senha!.isNotEmpty)) {
+      if (usuario.senha == null || usuario.senha!.trim().isEmpty) {
+        throw Exception("A senha é obrigatória.");
+      }
+      if (usuario.senha!.length <= 7) {
+        throw Exception("A senha não pode ser menor ou igual a 7 caracteres.");
+      }
+      if (!RegExp(r'[A-Z]').hasMatch(usuario.senha!)) {
+        throw Exception("A senha deve conter ao menos uma letra maiúscula.");
+      }
+      if (!RegExp(r'[0-9]').hasMatch(usuario.senha!)) {
+        throw Exception("A senha deve conter ao menos um número.");
+      }
+      if (!RegExp(r'[!@#\$&*~_.,;^%]').hasMatch(usuario.senha!)) {
+        throw Exception("A senha deve conter ao menos um caractere especial.");
+      }
     }
   }
 
@@ -50,7 +50,7 @@ class UsuarioValidation
     final emailExiste = await repository.exists("email = ?", [model.email]);
 
     if (emailExiste) {
-      throw Exception("Já existe um usuário cadastrado com este e-mail.");
+      throw Exception("Já existe um usuário cadastrado com este e-mail localmente.");
     }
   }
 

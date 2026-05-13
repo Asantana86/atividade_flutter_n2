@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart';
+
 import 'dart:io';
-import 'package:path/path.dart' as p; // Use: flutter pub add path
+import 'package:path/path.dart' as p;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SupabaseProvider {
@@ -40,7 +42,7 @@ class SupabaseProvider {
       // 4. Gera e retorna a URL Pública para salvarmos no banco de dados
       final String publicUrl = _client.storage.from(bucket).getPublicUrl(fileName);
       
-      print('✅ Upload concluído: $publicUrl');
+      debugPrint('✅ Upload concluído: $publicUrl');
       return publicUrl;
     } catch (e) {
       throw Exception('Erro ao subir arquivo para o Storage: $e');

@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
@@ -31,7 +33,7 @@ class DatabaseHelper {
   }
 
   Future _onCreate(Database db, int version) async {
-    print('🔄 Criando tabelas do banco de dados...');
+    debugPrint('🔄 Criando tabelas do banco de dados...');
 
     try {
       final String script =
@@ -45,17 +47,17 @@ class DatabaseHelper {
           try {
             await db.execute(trimmedCommand);
           } catch (e) {
-            print('❌ Erro ao executar comando SQL: $trimmedCommand');
-            print('❌ Erro: $e');
+            debugPrint('❌ Erro ao executar comando SQL: $trimmedCommand');
+            debugPrint('❌ Erro: $e');
             rethrow;
           }
         }
       }
 
-      print('✅ Banco de dados criado com sucesso');
+      debugPrint('✅ Banco de dados criado com sucesso');
     } catch (e, stackTrace) {
-      print('❌ ERRO CRÍTICO ao criar tabelas: $e');
-      print('📋 Stack: $stackTrace');
+      debugPrint('❌ ERRO CRÍTICO ao criar tabelas: $e');
+      debugPrint('📋 Stack: $stackTrace');
       rethrow;
     }
   }

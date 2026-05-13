@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 import 'package:dio/dio.dart';
 
 import '../helpers/app.config.dart';
@@ -150,7 +152,7 @@ class AppClient {
           ));
       return true;
     } catch (e) {
-      print('🔌 Teste de conexão falhou: $e');
+      debugPrint('🔌 Teste de conexão falhou: $e');
       return false;
     }
   }

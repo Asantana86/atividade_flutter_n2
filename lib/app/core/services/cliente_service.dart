@@ -8,7 +8,7 @@ class ClienteService
   ClienteService(super.validation, super.repository);
 
   @override
-  ClienteModel cloneModelWithId(ClienteModel model, int id) {
+  ClienteModel cloneModelWithId(ClienteModel model, dynamic id) {
     return ClienteModel(
       id: id,
       createdAt: model.createdAt,

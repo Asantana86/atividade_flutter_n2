@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 import '../providers/cliente_provider.dart';
 import '../providers/ordem_servico_provider.dart';
 import '../providers/servico_provider.dart';
@@ -157,7 +159,7 @@ class ScheduleManager {
   }
 
   void _log(String message) {
-    print('[${DateTime.now()}] [SCHEDULE_MANAGER] $message');
+    debugPrint('[${DateTime.now()}] [SCHEDULE_MANAGER] $message');
   }
 }
 

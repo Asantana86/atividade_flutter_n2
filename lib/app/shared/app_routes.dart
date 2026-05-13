@@ -23,6 +23,12 @@ import '../core/services/servico_service.dart';
 import '../modules/servico/pages/servico_list_page.dart';
 import '../core/controllers/servico_list_controller.dart';
 
+import '../modules/usuario/pages/usuario_list_page.dart';
+import '../core/controllers/usuario_list_controller.dart';
+import '../core/repositories/usuario_repository.dart';
+import '../core/services/usuario_service.dart';
+import '../core/validations/usuario_validation.dart';
+
 class AppRoutes {
   static const splash = '/';
   static const login = '/login';
@@ -32,6 +38,7 @@ class AppRoutes {
   static const gerenciarClientes = '/clientes';
   static const gerenciarTecnicos = '/tecnicos';
   static const gerenciarServicos = '/servicos';
+  static const gerenciarUsuarios = '/usuarios';
 
   static Map<String, WidgetBuilder> get routes => {
     splash: (_) => const SplashPage(),
@@ -54,6 +61,12 @@ class AppRoutes {
     gerenciarServicos: (_) => ServicoListPage(
       controller: ServicoListController(
         ServicoService(ServicoValidation(ServicoRepository()), ServicoRepository()),
+      ),
+    ),
+
+    gerenciarUsuarios: (_) => UsuarioListPage(
+      controller: UsuarioListController(
+        UsuarioService(UsuarioValidation(UsuarioRepository()), UsuarioRepository()),
       ),
     ),
   };

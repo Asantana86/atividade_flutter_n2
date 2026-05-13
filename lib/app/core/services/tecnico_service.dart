@@ -8,7 +8,7 @@ class TecnicoService
   TecnicoService(super.validation, super.repository);
 
   @override
-  TecnicoModel cloneModelWithId(TecnicoModel model, int id) {
+  TecnicoModel cloneModelWithId(TecnicoModel model, dynamic id) {
     return TecnicoModel(
       id: id,
       createdAt: model.createdAt,

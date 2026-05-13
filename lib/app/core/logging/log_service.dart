@@ -30,7 +30,7 @@ class LogService {
       // Cleanup automático na inicialização (logs mais antigos que 30 dias)
       final deletedCount = await _repository.cleanupOldLogs();
       if (kDebugMode && deletedCount > 0) {
-        print('🧹 LogService: Removidos $deletedCount logs antigos');
+        debugPrint('🧹 LogService: Removidos $deletedCount logs antigos');
       }
     } catch (e) {
       // ⚠️ Não deixar que erro no cleanup impeça inicialização
@@ -191,8 +191,8 @@ class LogService {
     final metadata = <String, dynamic>{
       'success': success,
       'timestamp': DateTime.now().toIso8601String(),
-      if (recordCount != null) 'recordCount': recordCount,
-      if (details != null) 'details': details,
+      'recordCount': ?recordCount,
+      'details': ?details,
     };
 
     if (success) {

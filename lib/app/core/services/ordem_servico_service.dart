@@ -8,7 +8,7 @@ class OrdemServicoService extends BaseService<OrdemServicoModel, OrdemServicoRep
   OrdemServicoService(super.validation, super.repository);
 
   @override
-  OrdemServicoModel cloneModelWithId(OrdemServicoModel model, int id) {
+  OrdemServicoModel cloneModelWithId(OrdemServicoModel model, dynamic id) {
     return OrdemServicoModel(
       id: id,
       createdAt: model.createdAt,
@@ -46,7 +46,7 @@ class OrdemServicoService extends BaseService<OrdemServicoModel, OrdemServicoRep
   }
 
   @override
-  Future<void> softDelete(int id) async {
+  Future<void> softDelete(dynamic id) async {
 
     final model = await findById(id);
     

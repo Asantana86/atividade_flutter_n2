@@ -12,7 +12,7 @@ abstract class BaseService<
 
   BaseService(this.validation, this.repository);
 
-  E cloneModelWithId(E model, int id);
+  E cloneModelWithId(E model, dynamic id);
 
   Future<E> create(E model) async {
     await validation.validateFieldCreate(model);
@@ -49,7 +49,7 @@ abstract class BaseService<
     return repository.findAllInactive();
   }
 
-  Future<E?> findById(int id) {
+  Future<E?> findById(dynamic id) {
     return repository.findById(id).then((model) {
       if (model != null) {
         return model;
@@ -59,7 +59,7 @@ abstract class BaseService<
     });
   }
 
-  Future<void> delete(int id) async {
+  Future<void> delete(dynamic id) async {
     final model = await findById(id);
     if (model != null) {
       beforeDelete(model);
@@ -68,7 +68,7 @@ abstract class BaseService<
     }
   }
 
-  Future<void> softDelete(int id) async {
+  Future<void> softDelete(dynamic id) async {
     final model = await findById(id);
     if (model != null) {
       beforeDelete(model);
@@ -77,7 +77,7 @@ abstract class BaseService<
     }
   }
 
-  Future<void> reactivate(int id) async {
+  Future<void> reactivate(dynamic id) async {
     final model = await findById(id);
     if (model != null) {
       await repository.reactivate(id);

@@ -182,6 +182,17 @@ class _DashboardPageState extends State<DashboardPage> {
                   );
                 },
               ),
+              ListTile(
+                leading: const Icon(Icons.manage_accounts),
+                title: const Text('Usuários'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.pushNamed(
+                    context,
+                    '/usuarios',
+                  );
+                },
+              ),
               const Divider(),
               ListTile(
                 leading: const Icon(Icons.play_circle_outline, color: Colors.blue),

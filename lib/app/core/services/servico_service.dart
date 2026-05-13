@@ -8,7 +8,7 @@ class ServicoService
   ServicoService(super.validation, super.repository);
 
   @override
-  ServicoModel cloneModelWithId(ServicoModel model, int id) {
+  ServicoModel cloneModelWithId(ServicoModel model, dynamic id) {
     return ServicoModel(
       id: id,
       createdAt: model.createdAt,

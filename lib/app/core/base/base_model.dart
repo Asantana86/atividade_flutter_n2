@@ -1,5 +1,5 @@
 abstract class BaseModel {
-  final int? id;
+  final dynamic id;
   final DateTime? createdAt;
   int isSync;
   bool ativo;
@@ -12,12 +12,16 @@ abstract class BaseModel {
   }): createdAt = createdAt ?? DateTime.now();
 
   BaseModel.fromMap(Map<String, dynamic> map)
-      : id = map['id'] as int?,
+      : id = map['id'], 
         createdAt = map['created_at'] != null
             ? DateTime.tryParse(map['created_at'].toString())
-            : null,
-        isSync = (map['is_sync'] as int?) ?? 0,
-        ativo = (map['ativo'] as int?) == 1;
+            : null,   
+        isSync = map['is_sync'] != null 
+            ? int.tryParse(map['is_sync'].toString()) ?? 0 
+            : 0,    
+        ativo = map['ativo'] is bool 
+            ? map['ativo'] 
+            : (map['ativo'].toString() == '1' || map['ativo'].toString() == 'true');
 
   Map<String, dynamic> toMap() {
     return {
