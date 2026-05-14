@@ -6,8 +6,10 @@ import '../../../shared/widgets/custom_card.dart';
 
 import '../../../core/controllers/cliente_list_controller.dart';
 import '../../../core/controllers/cliente_form_controller.dart';
+import '../../../core/controllers/cliente_detalhes_controller.dart';
 
 import './cliente_form_page.dart';
+import './cliente_detalhes_page.dart';
 
 class ClienteListPage extends StatefulWidget {
   final ClienteListController controller;
@@ -18,8 +20,8 @@ class ClienteListPage extends StatefulWidget {
   State<ClienteListPage> createState() => _ClienteListPageState();
 }
 
-class _ClienteListPageState extends BaseState<ClienteListPage, ClienteListController> {
-  
+class _ClienteListPageState
+    extends BaseState<ClienteListPage, ClienteListController> {
   @override
   ClienteListController get controller => widget.controller;
 
@@ -27,7 +29,7 @@ class _ClienteListPageState extends BaseState<ClienteListPage, ClienteListContro
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      controller.carregarClientes(onError: onError); 
+      controller.carregarClientes(onError: onError);
     });
   }
 
@@ -62,15 +64,28 @@ class _ClienteListPageState extends BaseState<ClienteListPage, ClienteListContro
     }
   }
 
+  void _navegarParaDetalhes(ClienteModel cliente) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ClienteDetalhesPage(
+          controller: ClienteDetalhesController(
+            controller.service,
+            clienteId: cliente.id,
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Clientes'), centerTitle: true),
-      
+
       body: ValueListenableBuilder<bool>(
         valueListenable: controller.isLoading,
         builder: (context, isLoading, _) {
-          
           if (isLoading) {
             return const Center(child: CircularProgressIndicator());
           }
@@ -78,7 +93,6 @@ class _ClienteListPageState extends BaseState<ClienteListPage, ClienteListContro
           return ValueListenableBuilder<List<ClienteModel>>(
             valueListenable: controller.clientes,
             builder: (context, clientes, _) {
-              
               if (clientes.isEmpty) {
                 return const Center(child: Text('Nenhum cliente encontrado.'));
               }
@@ -88,11 +102,13 @@ class _ClienteListPageState extends BaseState<ClienteListPage, ClienteListContro
                 itemCount: clientes.length,
                 itemBuilder: (context, index) {
                   final cliente = clientes[index];
-                  
+
                   return CustomCard(
                     title: cliente.nome,
-                    subtitle: 'Doc: ${cliente.documento}\nTel: ${cliente.telefone}',
+                    subtitle:
+                        'Doc: ${cliente.documento}\nTel: ${cliente.telefone}',
                     icon: Icons.business_center,
+                    onView: () => _navegarParaDetalhes(cliente),
                     onEdit: () => _navegarParaFormulario(cliente),
                     onDelete: () => _excluirCliente(cliente),
                   );

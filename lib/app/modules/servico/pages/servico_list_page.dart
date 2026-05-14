@@ -6,8 +6,10 @@ import '../../../shared/widgets/custom_card.dart';
 
 import '../../../core/controllers/servico_list_controller.dart';
 import '../../../core/controllers/servico_form_controller.dart';
+import '../../../core/controllers/servico_detalhes_controller.dart';
 
 import './servico_form_page.dart';
+import './servico_detalhes_page.dart';
 
 class ServicoListPage extends StatefulWidget {
   final ServicoListController controller;
@@ -18,8 +20,8 @@ class ServicoListPage extends StatefulWidget {
   State<ServicoListPage> createState() => _ServicoListPageState();
 }
 
-class _ServicoListPageState extends BaseState<ServicoListPage, ServicoListController> {
-  
+class _ServicoListPageState
+    extends BaseState<ServicoListPage, ServicoListController> {
   @override
   ServicoListController get controller => widget.controller;
 
@@ -62,6 +64,20 @@ class _ServicoListPageState extends BaseState<ServicoListPage, ServicoListContro
     }
   }
 
+  void _navegarParaDetalhes(ServicoModel servico) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ServicoDetalhesPage(
+          controller: ServicoDetalhesController(
+            controller.service,
+            servicoId: servico.id,
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -102,6 +118,7 @@ class _ServicoListPageState extends BaseState<ServicoListPage, ServicoListContro
                         fontSize: 16,
                       ),
                     ),
+                    onView: () => _navegarParaDetalhes(servico),
                     onEdit: () => _navegarParaFormulario(servico),
                     onDelete: () => _excluirServico(servico),
                   );

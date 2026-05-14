@@ -6,8 +6,10 @@ import '../../../shared/widgets/custom_card.dart';
 
 import '../../../core/controllers/tecnico_list_controller.dart';
 import '../../../core/controllers/tecnico_form_controller.dart';
+import '../../../core/controllers/tecnico_detalhes_controller.dart';
 
 import './tecnico_form_page.dart';
+import './tecnico_detalhes_page.dart';
 
 class TecnicoListPage extends StatefulWidget {
   final TecnicoListController controller;
@@ -18,8 +20,8 @@ class TecnicoListPage extends StatefulWidget {
   State<TecnicoListPage> createState() => _TecnicoListPageState();
 }
 
-class _TecnicoListPageState extends BaseState<TecnicoListPage, TecnicoListController> {
-  
+class _TecnicoListPageState
+    extends BaseState<TecnicoListPage, TecnicoListController> {
   @override
   TecnicoListController get controller => widget.controller;
 
@@ -62,6 +64,20 @@ class _TecnicoListPageState extends BaseState<TecnicoListPage, TecnicoListContro
     }
   }
 
+  void _navegarParaDetalhes(TecnicoModel tecnico) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => TecnicoDetalhesPage(
+          controller: TecnicoDetalhesController(
+            controller.service,
+            tecnicoId: tecnico.id,
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -91,6 +107,7 @@ class _TecnicoListPageState extends BaseState<TecnicoListPage, TecnicoListContro
                         ? tecnico.especialidade!
                         : 'Sem especialidade definida',
                     icon: Icons.engineering,
+                    onView: () => _navegarParaDetalhes(tecnico),
                     onEdit: () => _navegarParaFormulario(tecnico),
                     onDelete: () => _excluirTecnico(tecnico),
                   );

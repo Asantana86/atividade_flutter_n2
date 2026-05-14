@@ -6,8 +6,10 @@ import '../../../shared/widgets/custom_card.dart';
 
 import '../../../core/controllers/usuario_list_controller.dart';
 import '../../../core/controllers/usuario_form_controller.dart';
+import '../../../core/controllers/usuario_detalhes_controller.dart';
 
 import './usuario_form_page.dart';
+import './usuario_detalhes_page.dart';
 
 class UsuarioListPage extends StatefulWidget {
   final UsuarioListController controller;
@@ -18,8 +20,8 @@ class UsuarioListPage extends StatefulWidget {
   State<UsuarioListPage> createState() => _UsuarioListPageState();
 }
 
-class _UsuarioListPageState extends BaseState<UsuarioListPage, UsuarioListController> {
-  
+class _UsuarioListPageState
+    extends BaseState<UsuarioListPage, UsuarioListController> {
   @override
   UsuarioListController get controller => widget.controller;
 
@@ -62,6 +64,20 @@ class _UsuarioListPageState extends BaseState<UsuarioListPage, UsuarioListContro
     }
   }
 
+  void _navegarParaDetalhes(UsuarioModel usuario) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => UsuarioDetalhesPage(
+          controller: UsuarioDetalhesController(
+            controller.service,
+            usuarioId: usuario.id,
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -89,6 +105,7 @@ class _UsuarioListPageState extends BaseState<UsuarioListPage, UsuarioListContro
                     title: usuario.nome,
                     subtitle: usuario.email,
                     icon: Icons.person,
+                    onView: () => _navegarParaDetalhes(usuario),
                     onEdit: () => _navegarParaFormulario(usuario),
                     onDelete: () => _excluirUsuario(usuario),
                   );
