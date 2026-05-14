@@ -23,8 +23,12 @@ class OrdemServicoListView extends StatefulWidget {
   State<OrdemServicoListView> createState() => _OrdemServicoListViewState();
 }
 
-class _OrdemServicoListViewState extends BaseState<OrdemServicoListView, OrdemServicoListController> {
-  
+class _OrdemServicoListViewState
+    extends BaseState<OrdemServicoListView, OrdemServicoListController>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
   @override
   OrdemServicoListController get controller => widget.controller;
 
@@ -58,7 +62,7 @@ class _OrdemServicoListViewState extends BaseState<OrdemServicoListView, OrdemSe
       MaterialPageRoute(
         builder: (_) => OrdemServicoFinalizarFormPage(
           controller: OrdemServicoFinalizarFormController(
-            controller.service, 
+            controller.service,
             clienteService: controller.clienteService,
             model: os,
           ),
@@ -73,6 +77,8 @@ class _OrdemServicoListViewState extends BaseState<OrdemServicoListView, OrdemSe
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
+
     return ValueListenableBuilder<bool>(
       valueListenable: controller.isLoading,
       builder: (context, isLoading, _) {
@@ -83,17 +89,22 @@ class _OrdemServicoListViewState extends BaseState<OrdemServicoListView, OrdemSe
         return ValueListenableBuilder<List<OrdemServicoModel>>(
           valueListenable: controller.ordens,
           builder: (context, todasOrdens, _) {
-            
             final ordensFiltradas = widget.status == null
                 ? todasOrdens
-                : todasOrdens.where((os) => os.status == widget.status).toList();
+                : todasOrdens
+                      .where((os) => os.status == widget.status)
+                      .toList();
 
             if (ordensFiltradas.isEmpty) {
               return Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.assignment_late_outlined, size: 64, color: Colors.grey[400]),
+                    Icon(
+                      Icons.assignment_late_outlined,
+                      size: 64,
+                      color: Colors.grey[400],
+                    ),
                     const SizedBox(height: 16),
                     Text(
                       'Nenhuma ordem ${widget.status?.label ?? ""} encontrada.',
@@ -109,27 +120,41 @@ class _OrdemServicoListViewState extends BaseState<OrdemServicoListView, OrdemSe
               itemCount: ordensFiltradas.length,
               itemBuilder: (context, index) {
                 final os = ordensFiltradas[index];
-                
+
                 Color statusColor;
                 switch (os.status) {
-                  case StatusOS.emAndamento: statusColor = Colors.blue; break;
-                  case StatusOS.finalizado: statusColor = Colors.green; break;
-                  case StatusOS.cancelado: statusColor = Colors.red; break;
+                  case StatusOS.emAndamento:
+                    statusColor = Colors.blue;
+                    break;
+                  case StatusOS.finalizado:
+                    statusColor = Colors.green;
+                    break;
+                  case StatusOS.cancelado:
+                    statusColor = Colors.red;
+                    break;
                 }
 
                 return CustomCard(
                   title: 'Ordem #${os.id}',
-                  subtitle: 'Início: ${os.dataInicio.day}/${os.dataInicio.month}/${os.dataInicio.year}\nCliente ID: ${os.clienteId}',
+                  subtitle:
+                      'Início: ${os.dataInicio.day}/${os.dataInicio.month}/${os.dataInicio.year}\nCliente ID: ${os.clienteId}',
                   icon: Icons.assignment,
                   trailing: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: statusColor.withAlpha(40),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
                       os.status.label,
-                      style: TextStyle(color: statusColor, fontWeight: FontWeight.bold, fontSize: 12),
+                      style: TextStyle(
+                        color: statusColor,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
                     ),
                   ),
                   onView: () {
@@ -137,15 +162,17 @@ class _OrdemServicoListViewState extends BaseState<OrdemServicoListView, OrdemSe
                       context: context,
                       builder: (_) => AlertDialog(
                         title: Text('Detalhes da OS #${os.id}'),
-                        content: Text('Status: ${os.status.label}\nData: ${os.dataInicio}'),
+                        content: Text(
+                          'Status: ${os.status.label}\nData: ${os.dataInicio}',
+                        ),
                       ),
                     );
                   },
-                  onEdit: os.status == StatusOS.emAndamento 
-                      ? () => _irParaFinalizacao(os) 
+                  onEdit: os.status == StatusOS.emAndamento
+                      ? () => _irParaFinalizacao(os)
                       : null,
-                  onDelete: os.status == StatusOS.emAndamento 
-                      ? () => _cancelarOS(os) 
+                  onDelete: os.status == StatusOS.emAndamento
+                      ? () => _cancelarOS(os)
                       : null,
                 );
               },

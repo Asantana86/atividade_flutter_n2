@@ -8,9 +8,9 @@ import 'base_repository.dart';
 /// INTERFACE PURA PARA A UI
 abstract class IBaseController {
   ValueNotifier<bool> get isLoading;
-  
+
   void dispose();
-  
+
   Future<T?> executeOperation<T>(
     Future<T> operation, {
     void Function(String)? onSuccess,
@@ -31,18 +31,22 @@ abstract class IBaseController {
     String? successMessage,
   });
 }
+
 abstract class BaseController<
   E extends BaseModel,
   R extends BaseRepository<E>,
   V extends BaseValidation<E, R>,
   S extends BaseService<E, R, V>
-> implements IBaseController {
+>
+    implements IBaseController {
   final S service;
   final E? model;
-  
+
   // Estado universal de carregamento que pode ser escutado pela Page
   @override
   final ValueNotifier<bool> isLoading = ValueNotifier(false);
+
+  bool _isDisposed = false;
 
   BaseController(this.service, {this.model});
 
@@ -50,6 +54,7 @@ abstract class BaseController<
   @override
   @mustCallSuper
   void dispose() {
+    _isDisposed = true;
     isLoading.dispose();
   }
 
@@ -92,7 +97,9 @@ abstract class BaseController<
       _handleException(e, onError, customMessage: customErrorMessage);
       return [];
     } finally {
-      isLoading.value = false;
+      if (!_isDisposed) {
+        isLoading.value = false;
+      }
     }
   }
 
@@ -124,11 +131,12 @@ abstract class BaseController<
   /// Tratamento centralizado de exceções que devolve a mensagem formatada
   /// para o callback [onError], que será responsável por mostrá-la na UI.
   void _handleException(
-    dynamic exception, 
+    dynamic exception,
     void Function(String)? onError, {
     String? customMessage,
   }) {
-    if (onError == null) return; // Se a tela não pediu pra ser avisada, não faz nada
+    if (onError == null)
+      return; // Se a tela não pediu pra ser avisada, não faz nada
 
     String errorMessage;
 
@@ -138,9 +146,11 @@ abstract class BaseController<
       errorMessage = 'Parâmetro inválido: ${exception.message}';
     } else if (exception is StateError) {
       errorMessage = 'Erro de estado da aplicação: ${exception.message}';
-    } else if (exception.toString().contains('SQL') || exception.toString().contains('sqlite')) {
+    } else if (exception.toString().contains('SQL') ||
+        exception.toString().contains('sqlite')) {
       errorMessage = 'Erro no banco de dados local. Tente novamente.';
-    } else if (exception.toString().contains('HTTP') || exception.toString().contains('network')) {
+    } else if (exception.toString().contains('HTTP') ||
+        exception.toString().contains('network')) {
       errorMessage = 'Erro de conexão com o servidor.';
     } else if (exception.toString().contains('Exception:')) {
       // Limpa o prefixo "Exception: " gerado pelas nossas validações
