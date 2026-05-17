@@ -28,6 +28,8 @@ import '../../../core/controllers/ordem_servico_iniciar_form_controller.dart';
 import '../../ordem_servico/pages/ordem_servico_iniciar_form_page.dart';
 
 import '../../../core/controllers/ordem_servico_finalizar_form_controller.dart';
+import '../../../core/theme/theme_manager.dart';
+import 'package:provider/provider.dart';
 import '../../ordem_servico/pages/ordem_servico_finalizar_form_page.dart';
 
 class DashboardPage extends StatefulWidget {
@@ -243,6 +245,14 @@ class _DashboardPageState extends State<DashboardPage> {
                 },
               ),
               const Divider(),
+              Consumer<ThemeManager>(
+                builder: (context, themeManager, _) => SwitchListTile(
+                  value: themeManager.themeMode == ThemeMode.dark,
+                  onChanged: (v) => themeManager.toggleTheme(v),
+                  title: const Text('Tema escuro'),
+                  secondary: const Icon(Icons.dark_mode),
+                ),
+              ),
               ListTile(
                 leading: const Icon(Icons.sync, color: Colors.blue),
                 title: const Text('Forçar Sincronização'),
