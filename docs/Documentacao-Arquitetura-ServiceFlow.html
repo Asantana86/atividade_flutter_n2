@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<title>ServiceFlow — Documentação de Arquitetura</title>
+<style>
+body { font-family: Calibri, Arial, sans-serif; font-size: 11pt; line-height: 1.45; margin: 2cm; color: #222; }
+h1 { color: #1565C0; font-size: 22pt; border-bottom: 2px solid #1565C0; padding-bottom: 6px; }
+h2 { color: #1976D2; font-size: 14pt; margin-top: 22px; }
+h3 { color: #424242; font-size: 12pt; }
+table { border-collapse: collapse; width: 100%; margin: 12px 0; }
+th, td { border: 1px solid #999; padding: 6px 8px; text-align: left; }
+th { background: #E3F2FD; }
+code { font-family: Consolas, monospace; background: #f5f5f5; padding: 1px 4px; font-size: 10pt; }
+pre { font-family: Consolas, monospace; background: #f5f5f5; padding: 12px; font-size: 9pt; white-space: pre-wrap; }
+ul { margin: 8px 0; }
+li { margin: 4px 0; }
+hr { border: none; border-top: 1px solid #ccc; margin: 20px 0; }
+.meta { color: #555; margin-bottom: 20px; }
+</style>
+</head>
+<body>
+
+<h1>ServiceFlow — Documentação de Arquitetura</h1>
+<p class="meta"><strong>Projeto:</strong> atividade_flutter_n2<br/>
+<strong>Aplicativo:</strong> ServiceFlow — Gestão de Ordens de Serviço<br/>
+<strong>Versão:</strong> 1.0 | <strong>Data:</strong> maio/2026</p>
+
+<hr/>
+
+<h2>1. O que é este aplicativo?</h2>
+<p>O <strong>ServiceFlow</strong> é um app mobile (Flutter) para técnicos e gestores registrarem e acompanharem <strong>ordens de serviço (O.S.)</strong>. Ele permite:</p>
+<ul>
+<li>Fazer login com conta segura (Supabase)</li>
+<li>Cadastrar clientes, técnicos, serviços e usuários</li>
+<li>Abrir, iniciar e finalizar ordens de serviço</li>
+<li>Tirar fotos e coletar assinatura digital como evidência</li>
+<li>Trabalhar <strong>sem internet</strong>: os dados ficam no celular e sincronizam quando a rede voltar</li>
+</ul>
+<p>O foco da arquitetura é <strong>reaproveitar código</strong>: regras comuns ficam em classes base no núcleo (<code>core</code>), e cada funcionalidade (módulo) só implementa o que é específico.</p>
+
+<hr/>
+
+<h2>2. Visão geral da arquitetura</h2>
+<p>O projeto segue uma <strong>arquitetura em camadas</strong>, organizada por pastas:</p>
+<table>
+<tr><th>Camada</th><th>Pasta</th><th>O que faz (em linguagem simples)</th></tr>
+<tr><td>Entrada do app</td><td><code>lib/main.dart</code></td><td>Liga o Supabase, o banco local e a sincronização antes de abrir a tela</td></tr>
+<tr><td>Interface global</td><td><code>lib/app/shared/</code></td><td>Rotas, tema e widgets reutilizáveis</td></tr>
+<tr><td>Regras e dados</td><td><code>lib/app/core/</code></td><td>Modelos, validações, serviços, repositórios, HTTP, sync</td></tr>
+<tr><td>Telas por função</td><td><code>lib/app/modules/</code></td><td>Login, dashboard, clientes, O.S., etc.</td></tr>
+</table>
+
+<h3>Fluxo de uma operação típica (ex.: salvar um cliente)</h3>
+<ol>
+<li><strong>Page (tela)</strong> — o usuário preenche o formulário e toca em Salvar.</li>
+<li><strong>Controller</strong> — recebe a ação, mostra loading e trata erros.</li>
+<li><strong>Service</strong> — aplica validações de negócio e chama o repositório.</li>
+<li><strong>Validation</strong> — confere campos obrigatórios e regras.</li>
+<li><strong>Repository</strong> — grava ou lê no <strong>SQLite</strong> (banco no aparelho).</li>
+<li><strong>Schedule + Provider</strong> — em segundo plano, envia para o <strong>Supabase</strong> na nuvem.</li>
+</ol>
+<pre>Page/UI → Controller → Service → Repository (SQLite)
+                ↓                              ↓
+         Loading/erros                   is_sync = 0
+                ↑                              ↓
+         Feedback (SnackBar)          BaseSchedule → BaseProvider (nuvem)</pre>
+
+<hr/>
+
+<h2>3. Estrutura de pastas</h2>
+<pre>lib/
+├── main.dart
+└── app/
+    ├── core/          (base, models, repositories, services, controllers...)
+    ├── shared/        (rotas, widgets)
+    └── modules/       (splash, auth, dashboard, clientes, ordem_servico...)</pre>
+
+<hr/>
+
+<h2>4. Inicialização do aplicativo (main.dart)</h2>
+<ol>
+<li><strong>WidgetsFlutterBinding</strong> — prepara o motor do Flutter.</li>
+<li><strong>Supabase.initialize</strong> — conecta autenticação e API na nuvem.</li>
+<li><strong>Somente em mobile</strong> (não na web): DatabaseHelper, LogService, SyncSystemInitializer.</li>
+<li><strong>runApp(AppWidget)</strong> — exibe o app com rotas e tema.</li>
+</ol>
+<p>A tela inicial é a <strong>Splash</strong>, que redireciona para login ou dashboard.</p>
+
+<hr/>
+
+<h2>5. Classes base (o esqueleto do projeto)</h2>
+
+<h3>5.1 BaseModel</h3>
+<p>Toda entidade de negócio herda dela.</p>
+<table>
+<tr><th>Campo</th><th>Significado</th></tr>
+<tr><td><code>id</code></td><td>Identificador do registro</td></tr>
+<tr><td><code>createdAt</code></td><td>Data de criação</td></tr>
+<tr><td><code>isSync</code></td><td>0 = não sincronizado; 1 = sincronizado com a nuvem</td></tr>
+<tr><td><code>ativo</code></td><td>true = ativo; false = desativado (exclusão lógica)</td></tr>
+</table>
+
+<h3>5.2 BaseRepository</h3>
+<p>Centraliza operações no SQLite: insert, update, delete, findAll, findById, softDelete, findAllPendingSync.</p>
+
+<h3>5.3 BaseValidation</h3>
+<p>Valida campos e regras antes de criar ou atualizar.</p>
+
+<h3>5.4 BaseService</h3>
+<p>Orquestra o CRUD: validação → hooks before/after → repositório.</p>
+
+<h3>5.5 BaseController</h3>
+<p>Liga a tela ao serviço; gerencia <code>isLoading</code> e tratamento de erros.</p>
+
+<h3>5.6 BaseProvider</h3>
+<p>Comunicação com Supabase: syncToCloud, fetchFromCloud, deleteFromCloud.</p>
+
+<h3>5.7 BaseSchedule</h3>
+<p>Motor offline-first: timer (5 min), detecta internet, envia pendentes e baixa atualizações.</p>
+
+<h3>5.8 Outras classes importantes</h3>
+<table>
+<tr><th>Classe</th><th>Função</th></tr>
+<tr><td>AppWidget</td><td>MaterialApp com tema e rotas</td></tr>
+<tr><td>AppRoutes</td><td>Mapa de rotas nomeadas</td></tr>
+<tr><td>DatabaseHelper</td><td>Singleton do SQLite</td></tr>
+<tr><td>AppClient</td><td>Cliente HTTP (Dio)</td></tr>
+<tr><td>AuthService</td><td>Login/logout Supabase</td></tr>
+<tr><td>ScheduleManager</td><td>Gerencia todos os schedules de sync</td></tr>
+</table>
+
+<hr/>
+
+<h2>6. Modelos de dados</h2>
+<table>
+<tr><th>Modelo</th><th>Descrição</th></tr>
+<tr><td>UsuarioModel</td><td>Usuário do sistema (nome, e-mail)</td></tr>
+<tr><td>ClienteModel</td><td>Cliente atendido</td></tr>
+<tr><td>TecnicoModel</td><td>Técnico que executa o serviço</td></tr>
+<tr><td>ServicoModel</td><td>Catálogo de serviços</td></tr>
+<tr><td>OrdemServicoModel</td><td>O.S. com fotos, assinatura e status</td></tr>
+</table>
+<p>Status da O.S.: Em Andamento, Finalizado, Cancelado.</p>
+
+<hr/>
+
+<h2>7. Módulos (telas)</h2>
+<table>
+<tr><th>Módulo</th><th>Responsabilidade</th></tr>
+<tr><td>splash</td><td>Abertura; verifica sessão</td></tr>
+<tr><td>auth</td><td>Login e cadastro</td></tr>
+<tr><td>dashboard</td><td>Painel do técnico e sync manual</td></tr>
+<tr><td>clientes / tecnico / servico / usuario</td><td>CRUD de cadastros</td></tr>
+<tr><td>ordem_servico</td><td>Listar, iniciar e finalizar O.S.</td></tr>
+</table>
+
+<hr/>
+
+<h2>8. Sincronização offline-first</h2>
+<ol>
+<li>Salvar sempre no SQLite com <code>is_sync = 0</code>.</li>
+<li>ScheduleManager registra um schedule por entidade.</li>
+<li>Com rede: upload de pendentes e download de novidades; marca <code>is_sync = 1</code>.</li>
+<li>Dashboard pode forçar sync com <code>SyncSystemInitializer.forceSyncAll()</code>.</li>
+</ol>
+
+<hr/>
+
+<h2>9. Rede e segurança</h2>
+<ul>
+<li><strong>Supabase</strong> — autenticação e API REST</li>
+<li><strong>Dio (AppClient)</strong> — HTTP com interceptors de auth e erro</li>
+<li><strong>Token</strong> — armazenado com flutter_secure_storage</li>
+</ul>
+
+<hr/>
+
+<h2>10. Widgets compartilhados</h2>
+<p>CustomTextField, CustomButton, CustomDropdown, CustomDatePicker, CustomCard, CustomImagePicker, AppLogo.</p>
+
+<hr/>
+
+<h2>11. Dependências principais</h2>
+<table>
+<tr><th>Pacote</th><th>Uso</th></tr>
+<tr><td>sqflite</td><td>Banco local</td></tr>
+<tr><td>supabase_flutter</td><td>Auth e backend</td></tr>
+<tr><td>dio</td><td>HTTP</td></tr>
+<tr><td>connectivity_plus</td><td>Detectar internet</td></tr>
+<tr><td>image_picker / signature</td><td>Evidências na O.S.</td></tr>
+</table>
+
+<hr/>
+
+<h2>12. Resumo</h2>
+<ul>
+<li>App <strong>modular</strong>: cada pasta em modules/ é uma funcionalidade.</li>
+<li><strong>Core</strong> concentra classes base, sync e HTTP.</li>
+<li>Padrão <strong>Page → Controller → Service → Validation → Repository</strong>.</li>
+<li>Nuvem via <strong>Provider + Schedule</strong>, sem a tela lidar com rede.</li>
+<li><strong>Offline-first</strong> para trabalho em campo.</li>
+</ul>
+
+<p><em>Documento gerado com base no código-fonte do repositório atividade_flutter_n2.</em></p>
+
+</body>
+</html>
