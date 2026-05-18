@@ -35,19 +35,25 @@ class OrdemServicoListController extends BaseController<
     super.dispose();
   }
 
-  /// Carrega todas as OS do banco
-  Future<void> carregarOrdens({void Function(String)? onError}) async {
+  /// Carrega OS conforme a aba: Canceladas usa inativas+status; demais só ativos.
+  Future<void> carregarOrdens({
+    StatusOS? abaStatus,
+    void Function(String)? onError,
+  }) async {
     final result = await executeListOperation(
-      service.findAllActive(),
+      abaStatus == StatusOS.cancelado
+          ? service.findCanceladas()
+          : service.findAllActive(),
       onError: onError,
     );
-    
+
     ordens.value = result;
   }
 
   /// Cancela uma OS
   Future<bool> cancelarOS(
     int id, {
+    StatusOS? abaStatus,
     void Function(String)? onSuccess,
     void Function(String)? onError,
   }) async {
@@ -59,9 +65,9 @@ class OrdemServicoListController extends BaseController<
     );
 
     if (success) {
-      await carregarOrdens(onError: onError);
+      await carregarOrdens(abaStatus: abaStatus, onError: onError);
     }
-    
+
     return success;
   }
 }

@@ -70,4 +70,18 @@ class OrdemServicoService extends BaseService<OrdemServicoModel, OrdemServicoRep
     final all = await repository.findAllActive();
     return all.where((os) => os.status == status).toList();
   }
+
+  /// Inativas canceladas + ativas canceladas (deduplicadas por id).
+  Future<List<OrdemServicoModel>> findCanceladas() async {
+    final inativas = await repository.findAllInactive();
+    final ativas = await repository.findAllActive();
+
+    final map = <dynamic, OrdemServicoModel>{};
+    for (final os in [...inativas, ...ativas]) {
+      if (os.status == StatusOS.cancelado) {
+        map[os.id] = os;
+      }
+    }
+    return map.values.toList();
+  }
 }

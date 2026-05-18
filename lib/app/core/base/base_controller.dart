@@ -68,7 +68,7 @@ abstract class BaseController<
     String? successMessage,
   }) async {
     try {
-      isLoading.value = true;
+      if (!_isDisposed) isLoading.value = true;
       final result = await operation;
 
       if (successMessage != null && onSuccess != null) {
@@ -79,7 +79,7 @@ abstract class BaseController<
       _handleException(e, onError);
       return null;
     } finally {
-      isLoading.value = false;
+      if (!_isDisposed) isLoading.value = false;
     }
   }
 
@@ -91,15 +91,13 @@ abstract class BaseController<
     String? customErrorMessage,
   }) async {
     try {
-      isLoading.value = true;
+      if (!_isDisposed) isLoading.value = true;
       return await operation;
     } catch (e) {
       _handleException(e, onError, customMessage: customErrorMessage);
       return [];
     } finally {
-      if (!_isDisposed) {
-        isLoading.value = false;
-      }
+      if (!_isDisposed) isLoading.value = false;
     }
   }
 
@@ -113,7 +111,7 @@ abstract class BaseController<
     String? successMessage,
   }) async {
     try {
-      isLoading.value = true;
+      if (!_isDisposed) isLoading.value = true;
       await operation;
 
       if (successMessage != null && onSuccess != null) {
@@ -124,7 +122,7 @@ abstract class BaseController<
       _handleException(e, onError);
       return false;
     } finally {
-      isLoading.value = false;
+      if (!_isDisposed) isLoading.value = false;
     }
   }
 

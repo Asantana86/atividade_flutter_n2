@@ -25,18 +25,15 @@ class OrdemServicoListView extends StatefulWidget {
   State<OrdemServicoListView> createState() => _OrdemServicoListViewState();
 }
 
-class _OrdemServicoListViewState extends BaseState<OrdemServicoListView, OrdemServicoListController> {
-  
+class _OrdemServicoListViewState extends BaseState<OrdemServicoListView, OrdemServicoListController> with AutomaticKeepAliveClientMixin {
   @override
-  OrdemServicoListController get controller => widget.controller;
+  bool get wantKeepAlive => true;
 
   @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      controller.carregarOrdens(onError: onError);
-    });
-  }
+  bool get disposeControllerOnDispose => false;
+
+  @override
+  OrdemServicoListController get controller => widget.controller;
 
   Future<void> _cancelarOS(OrdemServicoModel os) async {
     final confirmed = await showConfirmation(
@@ -48,6 +45,7 @@ class _OrdemServicoListViewState extends BaseState<OrdemServicoListView, OrdemSe
     if (confirmed == true) {
       await controller.cancelarOS(
         os.id!,
+        abaStatus: widget.status,
         onSuccess: onSuccess,
         onError: onError,
       );
@@ -69,7 +67,7 @@ class _OrdemServicoListViewState extends BaseState<OrdemServicoListView, OrdemSe
     );
 
     if (recarregar == true) {
-      controller.carregarOrdens(onError: onError);
+      controller.carregarOrdens(abaStatus: widget.status, onError: onError);
     }
   }
 
@@ -92,6 +90,9 @@ class _OrdemServicoListViewState extends BaseState<OrdemServicoListView, OrdemSe
 
   @override
   Widget build(BuildContext context) {
+
+    super.build(context);
+    
     return ValueListenableBuilder<bool>(
       valueListenable: controller.isLoading,
       builder: (context, isLoading, _) {
@@ -103,7 +104,8 @@ class _OrdemServicoListViewState extends BaseState<OrdemServicoListView, OrdemSe
           valueListenable: controller.ordens,
           builder: (context, todasOrdens, _) {
             
-            final ordensFiltradas = widget.status == null
+            final ordensFiltradas = widget.status == null ||
+                    widget.status == StatusOS.cancelado
                 ? todasOrdens
                 : todasOrdens.where((os) => os.status == widget.status).toList();
 

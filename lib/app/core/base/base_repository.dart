@@ -96,8 +96,8 @@ abstract class BaseRepository<E extends BaseModel> {
     final db = await getConnection();
     final result = await db.query(
       tableName,
-      where: 'is_sync = ? AND ativo = ?',
-      whereArgs: [0, 1],
+      where: 'is_sync = ?',
+      whereArgs: [0],
     );
     return result.map((map) => fromMap(map)).toList();
   }

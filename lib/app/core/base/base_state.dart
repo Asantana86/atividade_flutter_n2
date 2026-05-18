@@ -10,9 +10,14 @@ abstract class BaseState<T extends StatefulWidget, C extends IBaseController>
   
   C get controller;
 
+  /// Quando false, o State não descarta o controller (ex.: controller compartilhado no dashboard).
+  bool get disposeControllerOnDispose => true;
+
   @override
   void dispose() {
-    controller.dispose(); 
+    if (disposeControllerOnDispose) {
+      controller.dispose();
+    }
     super.dispose();
   }
 
