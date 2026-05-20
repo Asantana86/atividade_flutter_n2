@@ -1,210 +1,275 @@
-# 🚀 Projeto ServiceFlow - Gestão Inteligente de O.S.
+# ServiceFlow — Documentação de Arquitetura
 
-## 📋 Visão Geral
-O **ServiceFlow** é um sistema de gestão de ordens de serviço (O.S.) desenvolvido como parte da disciplina de Desenvolvimento de Sistemas para Dispositivos Móveis. O projeto foca em mobilidade, operação *offline-first* e arquitetura modular de alta performance, simulando um ambiente real de desenvolvimento corporativo.
-
-## 🎯 Objetivo
-Padronizar o desenvolvimento de um app profissional utilizando **Flutter 3.41.4** e **Dart 3.11.1**, aplicando conceitos de arquitetura limpa, generics e injeção de dependência para eliminar o retrabalho e garantir a escalabilidade do código rumo à avaliação N2.
-
-## 🏗️ Arquitetura do Sistema
-Utilizamos a estrutura **Base-Driven Architecture**, focada em componentes genéricos e reutilizáveis, garantindo que a inteligência esteja no `core`:
-
-* **BaseModel:** Classe abstrata que obriga todas as entidades a possuírem `id`, `createdAt` e métodos de conversão (`toMap` / `toJson`).
-* **BaseRepository<T>:** Abstração genérica para operações CRUD, centralizando a lógica de acesso a dados (SQLite e API).
-* **BaseViewModel<T>:** Gestão de estados (extends `ChangeNotifier`) com suporte nativo a estados de carregamento e erros.
-* **DioClient & Interceptors:** Motor de rede centralizado com `Interceptors` para injeção automática de Token JWT e tratamento de erros globais (Ex: 401 Unauthorized).
+**Projeto:** atividade_flutter_n2  
+**Aplicativo:** ServiceFlow — Gestão de Ordens de Serviço  
+**Versão do documento:** 1.0  
+**Data:** maio/2026
 
 ---
 
-## 📑 Requisitos Funcionais (RF)
-* **RF01 - Autenticação:** Login com persistência de token seguro via `flutter_secure_storage` e gestão automatizada via Interceptor.
-* **RF02 - Sincronização:** Operação *offline-first* com persistência local em SQLite e fila de sincronismo inteligente.
-* **RF03 - Evidências:** Captura de fotos e assinatura digital via dispositivos de hardware.
-* **RF04 - Comunicação:** Integração direta com suporte via WhatsApp para chamados emergenciais.
-* **RF05 - Componentização:** Uso de widgets customizados e reutilizáveis para padronização da UI.
+## 1. O que é este aplicativo?
 
-## 📝 User Stories & Backlog
-1.  **US01:** "Como técnico, quero uma interface padronizada para registro ágil de O.S."
-2.  **US02:** "Como técnico, preciso salvar meus relatórios mesmo sem conexão com a internet."
-3.  **US03:** "Como gestor, quero receber as fotos e assinaturas assim que o dispositivo recuperar a rede."
+O **ServiceFlow** é um app mobile (Flutter) para técnicos e gestores registrarem e acompanharem **ordens de serviço (O.S.)**. Ele permite:
+
+- Fazer login com conta segura (Supabase)
+- Cadastrar clientes, técnicos, serviços e usuários
+- Abrir, iniciar e finalizar ordens de serviço
+- Tirar fotos e coletar assinatura digital como evidência
+- Trabalhar **sem internet**: os dados ficam no celular e sincronizam quando a rede voltar
+
+O foco da arquitetura é **reaproveitar código**: regras comuns ficam em classes base no núcleo (`core`), e cada funcionalidade (módulo) só implementa o que é específico.
 
 ---
 
-## 📐 Documentação Técnica
+## 2. Visão geral da arquitetura
 
-### 1. Estrutura de Pastas (Padrão Obrigatório)
-```text
+O projeto segue uma **arquitetura em camadas**, organizada por pastas:
+
+| Camada | Pasta | O que faz (em linguagem simples) |
+|--------|-------|----------------------------------|
+| Entrada do app | `lib/main.dart` | Liga o Supabase, o banco local e a sincronização antes de abrir a tela |
+| Interface global | `lib/app/shared/` | Rotas, tema e widgets reutilizáveis (botões, campos, cards) |
+| Regras e dados | `lib/app/core/` | Modelos, validações, serviços, repositórios, HTTP, sync |
+| Telas por função | `lib/app/modules/` | Login, dashboard, clientes, O.S., etc. |
+
+### Fluxo de uma operação típica (ex.: salvar um cliente)
+
+1. **Page (tela)** — o usuário preenche o formulário e toca em Salvar.
+2. **Controller** — recebe a ação, mostra loading e trata erros para exibir mensagens.
+3. **Service** — aplica validações de negócio e chama o repositório.
+4. **Validation** — confere campos obrigatórios e regras (e-mail duplicado, etc.).
+5. **Repository** — grava ou lê no **SQLite** (banco no aparelho).
+6. **Schedule + Provider** — em segundo plano, quando há internet, envia para o **Supabase** na nuvem.
+
+```
+┌─────────────┐     ┌──────────────┐     ┌─────────────┐     ┌────────────────┐
+│   Page/UI   │ ──► │  Controller  │ ──► │   Service   │ ──► │  Repository    │
+└─────────────┘     └──────────────┘     └─────────────┘     │  (SQLite)      │
+       ▲                    │                    │             └────────────────┘
+       │                    │                    │                      │
+       │                    ▼                    ▼                      ▼
+       │              Loading/erros        Validation              is_sync = 0
+       │                                                                  │
+       └──────────────── Feedback (SnackBar) ◄──────────────────────────┘
+                                                                          │
+                                    ┌─────────────────────────────────────┘
+                                    ▼
+                          ┌──────────────────┐     ┌─────────────────┐
+                          │  BaseSchedule    │ ──► │  BaseProvider   │
+                          │  (timer/rede)    │     │  (HTTP/Supabase)│
+                          └──────────────────┘     └─────────────────┘
+```
+
+---
+
+## 3. Estrutura de pastas
+
+```
 lib/
-├── app/
-│   ├── core/             # Framework base (Model, Repository, Http, Storage)
-│   │   ├── models/        # BaseModel
-│   │   ├── services/      # DioClient, DatabaseHelper, OfflineSync
-│   │   ├── repositories/  # BaseRepository<T>
-│   │   ├── mixins/        # UiFeedbackMixin, ValidatorMixin
-│   │   └── theme/         # Design System (Colors, Fonts, Themes)
-│   ├── shared/           # Widgets Reutilizáveis (CustomTextField, CustomButton)
-│   └── modules/          # Funcionalidades (Feature-first)
-│       ├── auth/         # Login e AuthRepository
-│       ├── dashboard/    # Resumo e Cards de Navegação
-│       └── service_order/# OrdemServico, View, Controller e Repository
-└── main.dart             # Inicialização e Injeção de Dependências
-```
-```mermaid
-classDiagram
-    %% Core Abstractions
-    class BaseModel {
-        <<abstract>>
-        +int? id
-        +DateTime? createdAt
-        +fromMap(Map map)*
-        +toMap() Map
-    }
-
-    class BaseRepository~T~ {
-        <<abstract>>
-        +Dio dio
-        +Database db
-        +insert(T item) Future
-        +update(T item) Future
-        +delete(int id) Future
-        +getAll() Future~List~T~~
-    }
-
-    class DioClient {
-        <<singleton>>
-        +Dio instance
-        -_addInterceptors()
-    }
-
-	class ErrorModel {
-        +int codeErro
-        +String titulo
-        +String mensagem
-    }
-
-    class AuthInterceptor {
-        +onRequest()
-        +onError()
-    }
-
-    %% Concrete Implementations
-    class OrdemServico {
-        +String cliente
-        +String status
-        +String fotoPath
-        +String assinaturaBase64
-    }
-
-    class Usuario {
-        +String nome
-        +String email
-        +String token
-    }
-
-    class OrdemServicoRepository {
-        +syncOfflineOrders()
-    }
-
-    class AuthRepository {
-        +login(String user, String pass)
-    }
-
-    %% Relationships
-    BaseModel <|-- OrdemServico
-    BaseModel <|-- Usuario
-    BaseRepository <|-- OrdemServicoRepository
-    BaseRepository <|-- AuthRepository
-    DioClient *-- AuthInterceptor : utiliza
-	DioClient ..> ErrorModel : mapeia em caso de falha
-    BaseRepository ..> DioClient : consome
-    OrdemServicoRepository ..> OrdemServico : gerencia
-	
-```
-## 📊 Dicionário de Dados (Persistência SQLite)
-
-| Campo | Tipo | Restrição | Descrição |
-| :--- | :--- | :--- | :-- |
-| id | INTEGER | PK | Chave Primária Autoincrement |
-| cliente | TEXT | NOT NULL | Nome do cliente ou empresa atendida |
-| status | TEXT | DEFAULT 'P' | "(P)endente, (S)incronizado" |
-| foto_path | TEXT | NULLABLE | Caminho físico da imagem no storage local |
-| assinatura | TEXT | NULLABLE | String em Base64 da assinatura coletada |
-| created_at | TEXT | NOT NULL | Data de criação (ISO8601) |
-
-## 🚀 Padrões de Implementação (O "Jeito ServiceFlow")
-Para manter a integridade e o nível profissional do projeto, os alunos devem seguir estas diretrizes:
-
-Regra da Herança:
-* **Toda nova entidade de negócio DEVE herdar de BaseModel.
-* **Todo novo repositório DEVE herdar de BaseRepository<T>.
-* **Toda lógica de estado deve estar em um Controller que utilize notifyListeners().
-* **Tratamento de Erros e Feedback:
-* **Proibido o uso de print() para depuração em produção.
-* **Utilizar obrigatoriamente o UiFeedbackMixin para exibir mensagens de erro/sucesso (SnackBars) padronizadas.
-
-Gestão de Dependências:
-A View nunca deve instanciar um Repository. Utilize injeção de dependência via construtor ou Service Locator.
-
-Passagem de Objetos:
-Ao navegar da listagem para o detalhe, o objeto completo da Entidade deve ser passado via parâmetro de rota.
-
-Offline-First:
-O salvamento inicial deve ser sempre local. A sincronização com a API é uma tarefa de segundo plano (Background Task) ou disparada por monitoramento de conexão.
-
-## 🛠️ Especificação da API (OpenAPI 3.0)
-Documentação do contrato que o backend deve fornecer para integração plena:
-
-Estrutura de Resposta de Erro (Padronizada)
-Em caso de falha (Status 3XX, 4XX ou 5XX), o backend retornará obrigatoriamente:
-
-```text
-	{
-	  "codeErro": 401,
-	  "titulo": "Acesso Negado",
-	  "mensagem": "Sua sessão expirou. Por favor, faça login novamente."
-	}
+├── main.dart                          # Ponto de entrada
+└── app/
+    ├── core/                          # Núcleo reutilizável
+    │   ├── base/                      # Classes abstratas (Model, Repository, etc.)
+    │   ├── models/                    # Entidades de negócio
+    │   ├── repositories/              # Acesso ao SQLite
+    │   ├── services/                    # Regras de negócio
+    │   ├── validations/                 # Validações por entidade
+    │   ├── controllers/                 # Lógica das telas
+    │   ├── providers/                   # Comunicação com API (nuvem)
+    │   ├── schedules/                   # Sincronização automática
+    │   ├── http/                        # Cliente Dio + interceptors
+    │   ├── helpers/                     # Banco, sessão, config, sync
+    │   ├── logging/                     # Registro de erros
+    │   ├── mixins/                      # Loading e mensagens na UI
+    │   └── theme/                       # Cores e estilo visual
+    ├── shared/                          # Rotas e widgets compartilhados
+    └── modules/                         # Telas por funcionalidade
+        ├── splash/
+        ├── auth/
+        ├── dashboard/
+        ├── clientes/
+        ├── tecnico/
+        ├── servico/
+        ├── usuario/
+        └── ordem_servico/
 ```
 
-*Endpoints*
-```text
-openapi: 3.0.0
-info:
-  title: ServiceFlow API
-  version: 1.0.0
-  description: Endpoints para gestão de ordens de serviço e autenticação técnica.
+---
 
-paths:
-  /auth/login:
-    post:
-      summary: Autentica o técnico e retorna o Token JWT.
-      responses:
-        '200':
-          description: Sucesso. Retorna { "token": "string", "user": { ... } }
-  
-  /service-orders:
-    get:
-      summary: Lista todas as ordens vinculadas ao técnico autenticado.
-      security:
-        - bearerAuth: []
-    post:
-      summary: Sincroniza uma ordem de serviço criada offline.
-      security:
-        - bearerAuth: []
-      requestBody:
-        content:
-          application/json:
-            schema:
-              properties:
-                cliente: { type: string }
-                foto_base64: { type: string }
-                assinatura_base64: { type: string }
-                created_at: { type: string }
+## 4. Inicialização do aplicativo (`main.dart`)
 
-components:
-  securitySchemes:
-    bearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
-```	  # atividade_flutter_n2
-Atividade de desenvolvimento flutter
+Ao abrir o app, acontece nesta ordem:
+
+1. **WidgetsFlutterBinding** — prepara o motor do Flutter.
+2. **Supabase.initialize** — conecta ao backend de autenticação e API na nuvem.
+3. **Somente em mobile** (não na web):
+   - **DatabaseHelper** — abre ou cria o banco SQLite `serviceflow.db`.
+   - **LogService** — prepara registro de erros.
+   - **SyncSystemInitializer** — inicia os agendadores de sincronização.
+4. **runApp(AppWidget)** — exibe o app com rotas e tema.
+
+A tela inicial é a **Splash**, que redireciona para login ou dashboard conforme a sessão.
+
+---
+
+## 5. Classes base (o “esqueleto” do projeto)
+
+Estas classes evitam repetir código em cada módulo.
+
+### 5.1 `BaseModel`
+
+Toda entidade de negócio herda dela.
+
+| Campo | Significado |
+|-------|-------------|
+| `id` | Identificador do registro |
+| `createdAt` | Data de criação |
+| `isSync` | `0` = ainda não foi para a nuvem; `1` = sincronizado |
+| `ativo` | `true` = ativo; `false` = desativado (exclusão lógica) |
+
+Métodos: `toMap()` e construtor `fromMap()` para converter entre objeto Dart e linha do SQLite.
+
+### 5.2 `BaseRepository<E>`
+
+Centraliza operações no banco local: `insert`, `update`, `delete`, `findAll`, `findById`, `softDelete`, `findAllPendingSync`, `markAsSynced`.
+
+Cada repositório concreto define `tableName` e `fromMap`.
+
+### 5.3 `BaseValidation<E, R>`
+
+Valida campos e regras antes de criar ou atualizar (implementado por entidade: `ClienteValidation`, etc.).
+
+### 5.4 `BaseService<E, R, V>`
+
+Orquestra o fluxo CRUD: chama validação → hooks `beforeCreate` / `afterCreate` → repositório.
+
+### 5.5 `BaseController<E, R, V, S>`
+
+Liga a tela ao serviço. Oferece:
+
+- `isLoading` — indica carregamento na UI
+- `executeOperation`, `executeListOperation`, `executeCrudOperation` — tratam erros de forma padronizada
+
+### 5.6 `BaseProvider<E>`
+
+Fala com a API externa (Supabase via REST): `syncToCloud`, `fetchFromCloud`, `deleteFromCloud`. Converte formato local ↔ formato da nuvem.
+
+### 5.7 `BaseSchedule<E, R, P>`
+
+Motor **offline-first**:
+
+- Timer a cada 5 minutos (padrão)
+- Detecta quando a internet volta (`connectivity_plus`)
+- Envia registros com `is_sync = 0` para a nuvem
+- Baixa atualizações remotas
+
+### 5.8 Outras classes importantes no core
+
+| Classe | Função |
+|--------|--------|
+| `AppWidget` | `MaterialApp` com tema e rotas |
+| `AppRoutes` | Mapa de rotas nomeadas |
+| `AppTheme` | Tema visual claro do app |
+| `DatabaseHelper` | Singleton do SQLite; executa `create_tables.sql` |
+| `AppClient` | Cliente HTTP (Dio) para Supabase |
+| `AuthInterceptor` | Coloca token JWT nas requisições |
+| `ErrorInterceptor` | Padroniza erros de rede |
+| `AuthService` | Login/logout com Supabase |
+| `SessionManager` | Guarda token com `flutter_secure_storage` |
+| `ScheduleManager` | Registra e inicia todos os schedules |
+| `SyncSystemInitializer` | Ponto único para ligar/desligar sync |
+| `LogService` | Log estruturado de falhas |
+
+---
+
+## 6. Modelos de dados (entidades)
+
+| Modelo | Descrição principal |
+|--------|---------------------|
+| `UsuarioModel` | Usuário do sistema (nome, e-mail); id pode ser texto (Supabase) |
+| `ClienteModel` | Cliente atendido (nome, documento, telefone, e-mail) |
+| `TecnicoModel` | Técnico que executa o serviço (nome, especialidade) |
+| `ServicoModel` | Tipo de serviço no catálogo (descrição, preço, tempo estimado) |
+| `OrdemServicoModel` | Ordem de serviço: vínculos com cliente/técnico/serviço, datas, fotos, assinatura, status |
+
+**Status da O.S.** (`StatusOS`): Em Andamento, Finalizado, Cancelado.
+
+Tabelas correspondentes no SQLite: `usuarios`, `clientes`, `tecnicos`, `servicos`, `ordens_servico` (definidas em `assets/sql/create_tables.sql`).
+
+---
+
+## 7. Módulos (telas e funcionalidades)
+
+| Módulo | Responsabilidade |
+|--------|------------------|
+| **splash** | Tela de abertura; verifica sessão |
+| **auth** | `LoginPage`, `RegisterPage` — autenticação Supabase |
+| **dashboard** | Painel do técnico: resumo, atalhos, lista de O.S., sync manual |
+| **clientes** | Listagem, formulário e detalhes de clientes |
+| **tecnico** | CRUD de técnicos |
+| **servico** | CRUD do catálogo de serviços |
+| **usuario** | Gestão de usuários |
+| **ordem_servico** | Listar O.S., iniciar (foto antes), detalhes, finalizar (foto depois + assinatura) |
+
+Cada módulo segue o padrão: **Page** + **Controller** + dependências injetadas no construtor (service, validation, repository).
+
+---
+
+## 8. Sincronização offline-first
+
+1. **Salvar sempre local primeiro** — o repositório grava no SQLite com `is_sync = 0`.
+2. **ScheduleManager** registra um schedule por entidade: usuários, clientes, técnicos, serviços, ordens de serviço.
+3. Quando há rede, o schedule:
+   - **Upload:** envia pendentes via `BaseProvider.syncToCloud`
+   - **Download:** busca novidades com `fetchFromCloud`
+   - Marca `is_sync = 1` após sucesso
+4. **Dashboard** pode forçar sync com `SyncSystemInitializer.forceSyncAll()`.
+
+Na **web**, o banco local e o sync não são inicializados (`kIsWeb` em `main.dart`).
+
+---
+
+## 9. Rede e segurança
+
+- **Supabase** — autenticação e API REST (`AppConfig` com URL e chave anônima).
+- **Dio (`AppClient`)** — todas as chamadas HTTP passam por interceptors.
+- **Token** — armazenado de forma segura; o `AuthInterceptor` adiciona o header `Authorization`.
+- Pacotes auxiliares: `image_picker`, `signature`, `mask_text_input_formatter`, `intl`.
+
+---
+
+## 10. Widgets compartilhados (`shared/widgets`)
+
+Componentes visuais padronizados para manter a interface consistente:
+
+- `CustomTextField`, `CustomButton`, `CustomElevatedButton`
+- `CustomDropdown`, `CustomDatePicker`, `CustomCard`
+- `CustomImagePicker` — seleção de fotos
+- `AppLogo`
+
+---
+
+## 11. Dependências principais (`pubspec.yaml`)
+
+| Pacote | Uso |
+|--------|-----|
+| `sqflite` | Banco SQLite local |
+| `supabase_flutter` | Auth e backend |
+| `dio` | Cliente HTTP |
+| `provider` | Estado (onde aplicável) |
+| `connectivity_plus` | Detectar internet |
+| `flutter_secure_storage` | Token seguro |
+| `image_picker` / `signature` | Evidências na O.S. |
+
+---
+
+## 12. Resumo para estudo ou apresentação
+
+- O app é **modular**: cada pasta em `modules/` é uma funcionalidade.
+- O **core** concentra a inteligência reutilizável (base classes + sync + HTTP).
+- O padrão **Page → Controller → Service → Validation → Repository** se repete em todas as entidades.
+- A nuvem entra pelo **Provider + Schedule**, sem a tela precisar saber detalhes de rede.
+- **Offline-first**: o técnico trabalha no campo; a sincronização acontece depois, automaticamente ou manualmente.
+
+---
+
